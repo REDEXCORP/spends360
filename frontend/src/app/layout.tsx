@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
     title: process.env.NEXT_PUBLIC_APP_NAME,
-    description: 'The future is now',
+    description: 'Executive financial intelligence for revenue, expenses, and profitability',
     icons: {
         icon: '/logo.svg',
     },

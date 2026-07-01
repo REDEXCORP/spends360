@@ -11,10 +11,3 @@ export const user = {
     updateDefaultWorkspace: (workspaceId: string | number) => apiRequestV1.put(`/user/workspace/${workspaceId}`, {}),
     createWorkspace: (name: string) => apiRequestV1.post('/user/workspace', { name }),
 };
-
-export const jobs = {
-    getAll: () => apiRequestV1.get('/jobs'),
-    getById: (id: string | number) => apiRequestV1.get(`/jobs/${id}`),
-    create: (data: any) => apiRequestV1.post('/jobs', data),
-    update: (id: string | number, data: any) => apiRequestV1.put(`/jobs/${id}`, data),
-};

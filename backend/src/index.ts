@@ -22,7 +22,7 @@ app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
 app.use('/api', router);
 
-app.get('/health', (req, res) => res.status(200).send('Agent api is running!'));
+app.get('/health', (req, res) => res.status(200).send('Spends360 API is running'));
 
 app.use((req, res) => res.status(404).send('not found'));
 
