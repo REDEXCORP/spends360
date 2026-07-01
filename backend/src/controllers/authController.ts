@@ -1,6 +1,6 @@
 import { asyncHandler } from '../middleware/async-handler';
 import { Request, Response } from 'express';
-import { loginSchema, registerSchema, verifyUserSchema } from '../utils/validations';
+import { loginSchema, registerSchema, verifyOtpSchema } from '../utils/validations';
 import * as authService from '../services/authService';
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
@@ -9,10 +9,13 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     return res.status(201).json(result);
 });
 
-export const verifyUser = asyncHandler(async (req: Request, res: Response) => {
-    const { id } = verifyUserSchema.parse(req.body);
-    const result = await authService.verifyUser(id);
-    return res.json(result);
+export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
+    const { email, otp } = verifyOtpSchema.parse(req.body);
+    const user = await authService.verifyOtp(email, otp, res);
+    return res.json({
+        message: 'Account verified successfully',
+        user,
+    });
 });
 
 export const login = asyncHandler(async (req: Request, res: Response) => {

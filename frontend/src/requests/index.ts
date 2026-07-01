@@ -1,9 +1,10 @@
 import { apiRequestV1 } from './services';
-import { UserSchema } from '@/helpers/types';
+import { RegisterFormValues, UserSchema, VerifyOtpFormValues } from '@/helpers/types';
 
 export const auth = {
     login: (user: UserSchema) => apiRequestV1.post('/auth/login', user),
-    register: (user: UserSchema) => apiRequestV1.post('/auth/register', user),
+    register: (user: RegisterFormValues) => apiRequestV1.post('/auth/register', user),
+    verifyOtp: (data: VerifyOtpFormValues) => apiRequestV1.post('/auth/verify-otp', data),
 };
 
 export const user = {

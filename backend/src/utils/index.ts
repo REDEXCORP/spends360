@@ -5,6 +5,8 @@ export const getUsernameFromEmail = (email: string): string => email.split('@')[
 export function removePassword(user: any) {
     delete user?.password;
     delete user?.refreshToken;
+    delete user?.otp;
+    delete user?.otpExpiresAt;
     return user;
 }
 

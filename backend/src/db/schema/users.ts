@@ -7,6 +7,8 @@ export const users = pgTable('users', {
     password: varchar({ length: 255 }).notNull(),
     refreshToken: varchar(),
     isVerified: boolean().default(false),
+    otp: varchar({ length: 6 }),
+    otpExpiresAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).defaultNow(),
     createdBy: bigint({ mode: 'number' }).references((): AnyPgColumn => users.id, { onDelete: 'set null' }),
     updatedAt: timestamp({ withTimezone: true }).defaultNow(),

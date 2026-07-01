@@ -4,20 +4,32 @@ import * as workspaceMembersRepository from '../repositories/workspaceMembersRep
 import { AppError } from '../utils/AppError';
 import { AuthService } from '../infrastructure/auth';
 import { CookieConfig } from '../infrastructure/cookie';
+import { MailService } from '../infrastructure/mail';
+import { OTP_VERIFICATION } from '../templates/otpVerification';
+import { OTP_TTL_MS } from '../constants/otp';
 import { Request, Response } from 'express';
 import { getUsernameFromEmail, removePassword } from '../utils';
+import { generateOtp } from '../utils/otp';
 import { Role } from '../utils/enums';
 
-export const register = async (email: string, password: string) => {
-    const existingUser = await usersRepository.getUserByEmail(email);
-    if (existingUser) throw new AppError('Email already in use', 400);
+const sendOtpEmail = async (email: string, otp: string) => {
+    const html = OTP_VERIFICATION.replace('{{otp}}', otp).replace('{{ttlMinutes}}', String(OTP_TTL_MS / (60 * 1000)));
 
-    const hashedPassword = await AuthService.hashPassword(password);
+    await MailService.sendMail({
+        to: email,
+        subject: 'Your Spends360 verification code',
+        html,
+    });
+};
+
+const createUserWithWorkspace = async (email: string, hashedPassword: string, otp: string, expiresAt: Date) => {
     const user = await usersRepository.create({
         username: getUsernameFromEmail(email),
         email,
         password: hashedPassword,
         isVerified: false,
+        otp,
+        otpExpiresAt: expiresAt,
     });
 
     const workspace = await workspaceRepository.createWorkspace(`${user.username}'s Workspace`, user.id);
@@ -31,19 +43,67 @@ export const register = async (email: string, password: string) => {
         updatedBy: user.id,
     });
 
-    return removePassword(user);
+    return user;
 };
 
-export const verifyUser = async (id: number) => {
-    const user = await usersRepository.getUserById(id);
-    if (!user) throw new AppError('User not found', 404);
+export const register = async (email: string, password: string) => {
+    const existingUser = await usersRepository.getUserByEmail(email);
+    const hashedPassword = await AuthService.hashPassword(password);
+    const { otp, expiresAt } = generateOtp();
 
-    const updatedUser = await usersRepository.update(id, { isVerified: true });
-    if (!updatedUser) throw new AppError('Error updating user', 500);
+    if (existingUser) {
+        if (existingUser.isVerified) {
+            throw new AppError('Email already in use', 400);
+        }
 
-    const userWithoutPassword = { ...updatedUser } as any;
-    delete userWithoutPassword.password;
-    return userWithoutPassword;
+        await usersRepository.update(existingUser.id, {
+            password: hashedPassword,
+            otp,
+            otpExpiresAt: expiresAt,
+        });
+    } else {
+        await createUserWithWorkspace(email, hashedPassword, otp, expiresAt);
+    }
+
+    await sendOtpEmail(email, otp);
+
+    return {
+        message: 'Verification code sent to your email',
+        email,
+    };
+};
+
+export const verifyOtp = async (email: string, otp: string, res: Response) => {
+    const user = await usersRepository.getUserByEmail(email);
+    if (!user) throw new AppError('Invalid verification code', 400);
+
+    if (user.isVerified) {
+        throw new AppError('Account already verified. Please log in.', 400);
+    }
+
+    if (!user.otp || !user.otpExpiresAt) {
+        throw new AppError('No verification code found. Please register again.', 400);
+    }
+
+    if (user.otp !== otp) {
+        throw new AppError('Invalid verification code', 400);
+    }
+
+    if (new Date() > user.otpExpiresAt) {
+        throw new AppError('Verification code expired. Please register again to get a new code.', 400);
+    }
+
+    const updatedUser = await usersRepository.update(user.id, {
+        isVerified: true,
+        otp: null,
+        otpExpiresAt: null,
+    });
+
+    if (!updatedUser) throw new AppError('Error verifying account', 500);
+
+    await generateTokensAndSetCookies(updatedUser, res);
+
+    return removePassword(updatedUser);
 };
 
 export const generateTokensAndSetCookies = async (user: any, res: Response) => {
@@ -63,7 +123,9 @@ export const login = async (email: string, password: string, res: Response) => {
     const user = await usersRepository.getUserByEmail(email);
     if (!user) throw new AppError('Invalid email or password', 401);
 
-    if (!user.isVerified) throw new AppError('User is not verified', 403);
+    if (!user.isVerified) {
+        throw new AppError('Please verify your email before logging in', 403);
+    }
 
     const isMatch = await AuthService.comparePassword(password, user.password);
     if (!isMatch) throw new AppError('Invalid email or password', 401);

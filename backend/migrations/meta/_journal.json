@@ -43,6 +43,13 @@
       "when": 1782894939056,
       "tag": "0005_eminent_the_phantom",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782899820481,
+      "tag": "0006_aspiring_la_nuit",
+      "breakpoints": true
     }
   ]
 }
