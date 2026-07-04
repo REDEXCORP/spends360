@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Spends360.API/Spends360.API.csproj" />
+  <Project Path="Spends360.Application/Spends360.Application.csproj" />
+  <Project Path="Spends360.Domain/Spends360.Domain.csproj" />
+  <Project Path="Spends360.Infrastructure/Spends360.Infrastructure.csproj" />
+  <Project Path="Spends360.Persistence/Spends360.Persistence.csproj" />
+</Solution>

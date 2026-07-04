@@ -1,0 +1,68 @@
+name: CI/CD Pipeline
+
+on:
+    push:
+        branches: [dev]
+
+jobs:
+    deploy-api:
+        name: Deploy API Server
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+
+            - name: Install API Dependencies
+              run: |
+                  cd backend
+                  npm install
+
+            - name: Build API (Optional)
+              run: |
+                  cd backend
+                  if npm run | grep -q "build"; then
+                    npm run build
+                  else
+                    echo "No build script found, skipping build."
+                  fi
+
+            - name: Deploy API to Vercel
+              env:
+                  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+                  VERCEL_ORG_ID: team_YhsHf7QvDyA4Hr9g7s3yYB0K
+                  VERCEL_PROJECT_ID: prj_cR03p52v6gjcrTZKLwSy3jRRWass
+              run: |
+                  cd backend
+                  npx vercel --prod --confirm --token $VERCEL_TOKEN
+
+    deploy-frontend:
+        name: Deploy Frontend
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+
+            - name: Install Frontend Dependencies
+              run: |
+                  cd frontend
+                  npm install
+
+            - name: Build Frontend
+              run: |
+                  cd frontend
+                  npm run build
+
+            - name: Deploy Frontend to Vercel
+              env:
+                  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+                  VERCEL_ORG_ID: team_YhsHf7QvDyA4Hr9g7s3yYB0K
+                  VERCEL_PROJECT_ID: prj_RgiUNIll2p5qLIz7w5fOhlyppNM5
+              run: |
+                  cd frontend
+                  npx vercel --prod --confirm --token $VERCEL_TOKEN

@@ -1,41 +1,45 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { user } from '@/requests';
-import { Layers } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { IconLayersLinked } from '@tabler/icons-react';
 
 export default function CreateWorkSpace() {
     const [workspaceName, setWorkspaceName] = useState('');
     const queryClient = useQueryClient();
 
-    const createWorkspaceMutation = useMutation({
-        mutationFn: (name: string) => user.createWorkspace(name),
+    const createMutation = useMutation({
+        mutationFn: (name: string) => user.createWorkspace({ name }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['user-profile'] });
         },
     });
 
     const handleCreate = () => {
-        if (!workspaceName.trim()) return;
-        createWorkspaceMutation.mutate(workspaceName.trim());
+        const name = workspaceName.trim();
+        if (!name) return;
+        createMutation.mutate(name);
     };
 
     return (
         <div className="flex min-h-screen w-full items-center justify-center p-4">
-            <div className="w-full max-w-md flex flex-col items-center gap-6 text-center">
+            <div className="flex w-full max-w-md flex-col items-center gap-6 text-center">
+                <div className="flex size-16 items-center justify-center rounded-2xl bg-[#492FA6]/10 text-[#492FA6]">
+                    <IconLayersLinked size={32} stroke={1.5} />
+                </div>
                 <div>
-                    <h1 className="text-2xl font-bold">Create your Workspace</h1>
-                    <p className="text-muted-foreground text-sm mt-1">
-                        You don't have any workspaces yet. Create one to get started.
+                    <h1 className="text-2xl font-bold text-neutral-900">Create your workspace</h1>
+                    <p className="mt-1 text-sm text-neutral-500">
+                        You don&apos;t have a workspace yet. Create one to get started.
                     </p>
                 </div>
 
-                <div className="flex flex-col gap-4 w-full">
+                <div className="flex w-full flex-col gap-4">
                     <Input
-                        placeholder="e.g. Acme Corp"
+                        placeholder="e.g. Acme Sales Team"
                         value={workspaceName}
                         onChange={e => setWorkspaceName(e.target.value)}
                         onKeyDown={e => {
@@ -47,13 +51,12 @@ export default function CreateWorkSpace() {
 
                     <Button
                         onClick={handleCreate}
-                        disabled={!workspaceName.trim() || createWorkspaceMutation.isPending}
-                        className="h-12 w-full text-base"
+                        disabled={!workspaceName.trim() || createMutation.isPending}
+                        className="h-12 w-full bg-[#492FA6] text-base text-white hover:bg-[#492FA6]/90"
                     >
-                        {createWorkspaceMutation.isPending ? 'Creating...' : 'Create Workspace'}
+                        {createMutation.isPending ? 'Creating...' : 'Create workspace'}
                     </Button>
                 </div>
-
             </div>
         </div>
     );

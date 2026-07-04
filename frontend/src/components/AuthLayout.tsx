@@ -1,0 +1,21 @@
+import { ReactNode } from 'react';
+
+export default function AuthLayout({ children }: { children: ReactNode }) {
+    const appName = process.env.NEXT_PUBLIC_APP_NAME || 'DezyIt';
+
+    return (
+        <section className="flex min-h-screen flex-col lg:flex-row">
+            <div className="hidden lg:flex lg:h-screen lg:w-1/2 lg:items-center lg:justify-center lg:rounded-br-3xl lg:rounded-tr-3xl lg:bg-[#492FA6]">
+                <div className="flex flex-col items-center px-4 text-center">
+                    <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-lg bg-white">
+                        <span className="text-2xl font-bold text-[#6B46C1]">Dt</span>
+                    </div>
+                    <h1 className="text-2xl font-semibold text-white">{appName}</h1>
+                </div>
+            </div>
+            <div className="flex flex-1 items-center justify-center bg-background px-4 py-10 lg:w-1/2 lg:px-8">
+                {children}
+            </div>
+        </section>
+    );
+}

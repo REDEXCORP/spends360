@@ -21,5 +21,6 @@ export const apiRequestV1 = {
     get: (url: string) => api.get(`/api${url}`).then(responseBody),
     post: (url: string, body: unknown) => api.post(`/api${url}`, body).then(responseBody),
     put: (url: string, body: unknown) => api.put(`/api${url}`, body).then(responseBody),
+    patch: (url: string, body: unknown) => api.patch(`/api${url}`, body).then(responseBody),
     del: (url: string) => api.delete(`/api${url}`).then(responseBody),
 };

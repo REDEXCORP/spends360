@@ -1,42 +1,39 @@
-import { cn } from '@/lib/utils';
-
 const Loading = () => {
     return (
-        <div className={cn('flex h-screen w-full items-center justify-center')}>
-            <div className="loader"></div>
-
-            <style jsx>{`
-                .loader {
+        <div className="flex h-screen w-full items-center justify-center">
+            <div className="reach-loader" />
+            <style>{`
+                .reach-loader {
                     width: 20px;
                     aspect-ratio: 1;
                     border-radius: 50%;
                     background: #000;
-                    box-shadow: 0 0 0 0 #0004;
-                    animation: ripple 1.5s infinite linear;
+                    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.25);
+                    animation: reach-ripple 1.5s infinite linear;
                     position: relative;
                 }
 
-                .loader::before,
-                .loader::after {
+                .reach-loader::before,
+                .reach-loader::after {
                     content: '';
                     position: absolute;
                     inset: 0;
                     border-radius: inherit;
-                    box-shadow: 0 0 0 0 #0004;
-                    animation: ripple 1.5s infinite linear;
+                    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.25);
+                    animation: reach-ripple 1.5s infinite linear;
                 }
 
-                .loader::before {
+                .reach-loader::before {
                     animation-delay: -0.5s;
                 }
 
-                .loader::after {
+                .reach-loader::after {
                     animation-delay: -1s;
                 }
 
-                @keyframes ripple {
+                @keyframes reach-ripple {
                     100% {
-                        box-shadow: 0 0 0 40px #0000;
+                        box-shadow: 0 0 0 40px transparent;
                     }
                 }
             `}</style>

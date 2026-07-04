@@ -5,12 +5,15 @@ import { useQuery } from '@tanstack/react-query';
 import { user } from '@/requests';
 import { ChildrenProps } from '@/helpers/interfaces';
 import Loading from './Loading';
+import CreateWorkSpace from './CreateWorkSpace';
 import { useRouter } from 'next/navigation';
 import { AuthContext } from '@/context/AuthContext';
-import CreateWorkSpace from './CreateWorkSpace';
+import { setProfile } from '@/store/slices/profileSlice';
+import { useDispatch } from 'react-redux';
 
 export const AuthProvider: React.FC<ChildrenProps> = ({ children }) => {
     const router = useRouter();
+    const dispatch = useDispatch();
     const {
         data: profile,
         isLoading: loading,
@@ -24,11 +27,13 @@ export const AuthProvider: React.FC<ChildrenProps> = ({ children }) => {
 
     useEffect(() => {
         if (!loading && error) router.push('/login');
-    }, [error]);
+    }, [loading, error, router]);
 
     if (loading || !profile) return <Loading />;
 
-    if (profile.workspaces.length === 0) return <CreateWorkSpace />;
+    if (!profile.workspaces?.length) return <CreateWorkSpace />;
+
+    dispatch(setProfile(profile));
 
     return <AuthContext.Provider value={{ profile, loading }}>{children}</AuthContext.Provider>;
 };
