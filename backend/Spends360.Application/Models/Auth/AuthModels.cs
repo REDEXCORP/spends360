@@ -1,17 +1,35 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Spends360.Application.Models.Auth;
 
 public sealed class RegisterRequest
 {
-    public required string Email { get; init; }
-    public required string Password { get; init; }
-    public required string ConfirmPassword { get; init; }
+    [Required(ErrorMessage = "Please enter a valid email address")]
+    [EmailAddress(ErrorMessage = "Please enter a valid email address")]
+    public string Email { get; init; } = string.Empty;
+
+    [Required(ErrorMessage = "Password must be at least 6 characters")]
+    [MinLength(6, ErrorMessage = "Password must be at least 6 characters")]
+    public string Password { get; init; } = string.Empty;
+
+    [Required(ErrorMessage = "Please confirm your password")]
+    [Compare(nameof(Password), ErrorMessage = "Passwords do not match")]
+    public string ConfirmPassword { get; init; } = string.Empty;
 }
 
 public sealed class VerifyRegisterRequest
 {
-    public required string Email { get; init; }
-    public required string Otp { get; init; }
-    public required string Password { get; init; }
+    [Required(ErrorMessage = "Please enter a valid email address")]
+    [EmailAddress(ErrorMessage = "Please enter a valid email address")]
+    public string Email { get; init; } = string.Empty;
+
+    [Required(ErrorMessage = "Enter the 6-digit code")]
+    [StringLength(6, MinimumLength = 6, ErrorMessage = "Enter the 6-digit code")]
+    public string Otp { get; init; } = string.Empty;
+
+    [Required(ErrorMessage = "Password must be at least 6 characters")]
+    [MinLength(6, ErrorMessage = "Password must be at least 6 characters")]
+    public string Password { get; init; } = string.Empty;
 }
 
 public sealed class LoginRequest

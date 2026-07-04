@@ -1,9 +1,7 @@
-using Microsoft.Extensions.Options;
 using Spends360.Application.Exceptions;
 using Spends360.Application.Interfaces;
 using Spends360.Application.Mappings;
 using Spends360.Application.Models.Auth;
-using Spends360.Application.Options;
 using Spends360.Domain.Entities;
 
 namespace Spends360.Application.Services;
@@ -11,24 +9,15 @@ namespace Spends360.Application.Services;
 public class AuthService(
     IUserRepository users,
     IPasswordHasher passwordHasher,
-    IEmailService email,
-    IOptions<AuthOptions> options) : IAuthService
+    IEmailService email) : IAuthService
 {
     private readonly IUserRepository _users = users;
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
     private readonly IEmailService _email = email;
-    private readonly AuthOptions _options = options.Value;
 
     public async Task<RegisterResponse> RegisterAsync(RegisterRequest request)
     {
         var email = NormalizeEmail(request.Email);
-        ValidatePassword(request.Password);
-
-        if (request.Password != request.ConfirmPassword)
-        {
-            throw new AppException("Passwords do not match", 400);
-        }
-
         var existing = await _users.GetByEmailAsync(email);
         var passwordHash = _passwordHasher.Hash(request.Password);
         string otp;
@@ -46,27 +35,19 @@ public class AuthService(
         }
         else
         {
-            var now = DateTimeOffset.UtcNow;
             var user = new User
             {
                 Email = email,
                 Password = passwordHash,
                 IsVerified = false,
-                CreatedAt = now,
-                UpdatedAt = now,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow,
             };
             otp = SetRegistrationOtp(user);
             await _users.CreateAsync(user);
         }
 
-        try
-        {
-            await _email.SendLoginOtpAsync(email, otp);
-        }
-        catch
-        {
-            throw new AppException("Failed to send OTP email. Please try again later.", 500);
-        }
+        await _email.SendLoginOtpAsync(email, otp);
 
         return new RegisterResponse
         {
@@ -75,10 +56,9 @@ public class AuthService(
         };
     }
 
-    public async Task<LoginSuccessResponse> VerifyRegistrationAsync(VerifyRegisterRequest request, string clientIp)
+    public async Task<LoginSuccessResponse> VerifyRegistrationAsync(VerifyRegisterRequest request, string? clientIp)
     {
         var email = NormalizeEmail(request.Email);
-        ValidatePassword(request.Password);
 
         var user = await _users.GetByEmailAsync(email);
         if (user is null)
@@ -120,10 +100,9 @@ public class AuthService(
         };
     }
 
-    public async Task<LoginResponse> LoginAsync(LoginRequest request, string clientIp)
+    public async Task<LoginResponse> LoginAsync(LoginRequest request, string? clientIp)
     {
         var email = NormalizeEmail(request.Email);
-        ValidatePassword(request.Password);
 
         var user = await _users.GetByEmailAsync(email);
         if (user is null || !user.IsVerified)
@@ -168,7 +147,7 @@ public class AuthService(
         };
     }
 
-    public async Task<LoginSuccessResponse> VerifyOtpAsync(VerifyOtpRequest request, string clientIp)
+    public async Task<LoginSuccessResponse> VerifyOtpAsync(VerifyOtpRequest request, string? clientIp)
     {
         var email = NormalizeEmail(request.Email);
         var user = await _users.GetByEmailAsync(email);
@@ -196,31 +175,35 @@ public class AuthService(
         };
     }
 
-    private string SetRegistrationOtp(User user)
+    private static string SetRegistrationOtp(User user)
     {
         var otp = Random.Shared.Next(100000, 999999).ToString();
         user.Otp = otp;
-        user.OtpExpiresAt = DateTimeOffset.UtcNow.AddMinutes(_options.RegistrationTokenMinutes);
+        user.OtpExpiresAt = DateTimeOffset.UtcNow.AddMinutes(GetRegistrationTokenMinutes());
         user.UpdatedAt = DateTimeOffset.UtcNow;
         return otp;
     }
 
-    private string SetLoginOtp(User user)
+    private static string SetLoginOtp(User user)
     {
         var otp = Random.Shared.Next(100000, 999999).ToString();
         user.Otp = otp;
-        user.OtpExpiresAt = DateTimeOffset.UtcNow.AddMinutes(_options.LoginOtpMinutes);
+        user.OtpExpiresAt = DateTimeOffset.UtcNow.AddMinutes(GetLoginOtpMinutes());
         user.UpdatedAt = DateTimeOffset.UtcNow;
         return otp;
     }
 
-    private static bool IsOtpValid(User user, string otp) =>
-        !string.IsNullOrWhiteSpace(user.Otp) &&
-        user.OtpExpiresAt is not null &&
-        user.Otp == otp &&
-        DateTimeOffset.UtcNow <= user.OtpExpiresAt;
+    private static bool IsOtpValid(User user, string otp)
+    {
+        var normalizedOtp = otp.Trim();
 
-    private async Task<UserDto> CompleteLoginAsync(User user, string clientIp)
+        return !string.IsNullOrWhiteSpace(user.Otp) &&
+            user.OtpExpiresAt is not null &&
+            user.Otp == normalizedOtp &&
+            DateTimeOffset.UtcNow <= user.OtpExpiresAt;
+    }
+
+    private async Task<UserDto> CompleteLoginAsync(User user, string? clientIp)
     {
         user.LastLoginAt = DateTimeOffset.UtcNow;
         user.LastLoginIp = clientIp;
@@ -231,25 +214,35 @@ public class AuthService(
         return UserMapper.ToDto(user);
     }
 
-    private bool RequiresLoginOtp(User user, string clientIp)
+    private bool RequiresLoginOtp(User user, string? clientIp)
     {
-        if (user.LastLoginAt is null || string.IsNullOrWhiteSpace(user.LastLoginIp))
+        if (user.LastLoginAt is null)
         {
             return true;
         }
 
-        var lastLoginExpired = DateTimeOffset.UtcNow - user.LastLoginAt > TimeSpan.FromDays(_options.LoginOtpIntervalDays);
-        var isDifferentIp = !string.Equals(user.LastLoginIp, clientIp, StringComparison.Ordinal);
-        return lastLoginExpired || isDifferentIp;
+        var lastLoginExpired = DateTimeOffset.UtcNow - user.LastLoginAt > TimeSpan.FromDays(GetLoginOtpIntervalDays());
+        if (lastLoginExpired)
+        {
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(clientIp) || string.IsNullOrWhiteSpace(user.LastLoginIp))
+        {
+            return false;
+        }
+
+        return !string.Equals(user.LastLoginIp, clientIp, StringComparison.Ordinal);
     }
 
     private static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 
-    private static void ValidatePassword(string password)
-    {
-        if (password.Length < 6)
-        {
-            throw new AppException("Password must be at least 6 characters long", 400);
-        }
-    }
+    private static int GetRegistrationTokenMinutes() =>
+        int.TryParse(Environment.GetEnvironmentVariable("AUTH_REGISTRATION_TOKEN_MINUTES"), out var minutes) ? minutes : 10;
+
+    private static int GetLoginOtpMinutes() =>
+        int.TryParse(Environment.GetEnvironmentVariable("AUTH_LOGIN_OTP_MINUTES"), out var minutes) ? minutes : 5;
+
+    private static int GetLoginOtpIntervalDays() =>
+        int.TryParse(Environment.GetEnvironmentVariable("AUTH_LOGIN_OTP_INTERVAL_DAYS"), out var days) ? days : 7;
 }

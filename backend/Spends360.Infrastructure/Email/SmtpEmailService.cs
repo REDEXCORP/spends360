@@ -8,14 +8,9 @@ using Spends360.Infrastructure.Options;
 
 namespace Spends360.Infrastructure.Email;
 
-public class SmtpEmailService : IEmailService
+public class SmtpEmailService(IOptions<SmtpOptions> smtp) : IEmailService
 {
-    private readonly SmtpOptions _smtp;
-
-    public SmtpEmailService(IOptions<SmtpOptions> smtp)
-    {
-        _smtp = smtp.Value;
-    }
+    private readonly SmtpOptions _smtp = smtp.Value;
 
     public async Task SendRegistrationVerificationAsync(string toEmail, string verifyLink)
     {

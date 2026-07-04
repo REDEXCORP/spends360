@@ -10,8 +10,7 @@ public class UserRepository(AppDbContext db) : IUserRepository
 
     public async Task<User?> GetByEmailAsync(string email)
     {
-        var normalized = email.Trim().ToLowerInvariant();
-        return await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalized);
+        return await _db.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
     }
 
     public async Task<User?> GetByIdAsync(long id)

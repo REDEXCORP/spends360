@@ -1,7 +1,5 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Spends360.Application.Interfaces;
-using Spends360.Application.Options;
 using Spends360.Application.Services;
 using Spends360.Infrastructure.Email;
 using Spends360.Infrastructure.Options;
@@ -21,11 +19,26 @@ public static class DependencyInjection
         return services;
     }
 
-    public static IServiceCollection AddAppOptions(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddAppOptions(this IServiceCollection services)
     {
-        services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
-        services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));
-        services.Configure<AuthOptions>(configuration.GetSection(AuthOptions.SectionName));
+        services.Configure<JwtOptions>(options =>
+        {
+            options.Secret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? options.Secret;
+            if (int.TryParse(Environment.GetEnvironmentVariable("JWT_ACCESS_TOKEN_MINUTES"), out var accessTokenMinutes))
+                options.AccessTokenMinutes = accessTokenMinutes;
+            if (int.TryParse(Environment.GetEnvironmentVariable("JWT_REGISTRATION_TOKEN_MINUTES"), out var registrationTokenMinutes))
+                options.RegistrationTokenMinutes = registrationTokenMinutes;
+        });
+        services.Configure<SmtpOptions>(options =>
+        {
+            options.Host = Environment.GetEnvironmentVariable("SMTP_HOST") ?? options.Host;
+            if (int.TryParse(Environment.GetEnvironmentVariable("SMTP_PORT"), out var port))
+                options.Port = port;
+            options.User = Environment.GetEnvironmentVariable("SMTP_USER") ?? options.User;
+            options.Pass = Environment.GetEnvironmentVariable("SMTP_PASS") ?? options.Pass;
+            options.From = Environment.GetEnvironmentVariable("SMTP_FROM") ?? options.From;
+            options.ReplyTo = Environment.GetEnvironmentVariable("SMTP_REPLY_TO") ?? options.ReplyTo;
+        });
         return services;
     }
 }

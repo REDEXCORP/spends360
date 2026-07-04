@@ -1,38 +1,28 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Spends360.API.Middleware;
-using Spends360.Application.Exceptions;
 using Spends360.Application.Interfaces;
 using Spends360.Application.Models.User;
 
 namespace Spends360.API.Controllers;
 
-[ApiController]
-[Route("api/user")]
-public class UserController : ControllerBase
+[Authorize]
+public class UserController(IUserService userService) : BaseApiController
 {
-    private readonly IUserService _userService;
-
-    public UserController(IUserService userService)
-    {
-        _userService = userService;
-    }
+    private readonly IUserService _userService = userService;
 
     [HttpGet("profile")]
     public async Task<ActionResult<UserProfileResponse>> GetProfile()
     {
-        var userId = GetAuthenticatedUserId();
-        var profile = await _userService.GetProfileAsync(userId);
-        return Ok(profile);
-    }
+        var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-    private long GetAuthenticatedUserId()
-    {
-        if (!HttpContext.Items.TryGetValue(JwtAuthMiddleware.UserIdItemKey, out var value) ||
-            value is not long userId)
+        if (userId is null)
         {
-            throw new AppException("Access denied: No token provided", 401);
+            return Unauthorized();
         }
 
-        return userId;
+        return Ok(await _userService.GetProfileAsync(long.Parse(userId)));
     }
 }

@@ -1,4 +1,4 @@
-# Reach
+# Spends360
 
-NEXT_PUBLIC_APP_NAME=Reach
+NEXT_PUBLIC_APP_NAME=Spends360
 NEXT_PUBLIC_API_BASE_URL=http://localhost:4000

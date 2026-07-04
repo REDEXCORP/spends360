@@ -1,31 +1,18 @@
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Spends360.Application.Interfaces;
 using Spends360.Application.Models.Auth;
-using Spends360.Application.Options;
 
 namespace Spends360.API.Controllers;
 
-[ApiController]
-[Route("api/auth")]
-public class AuthController : ControllerBase
+public class AuthController(
+    IAuthService authService,
+    IJwtTokenService jwt,
+    IWebHostEnvironment environment) : BaseApiController
 {
-    private readonly IAuthService _authService;
-    private readonly IJwtTokenService _jwt;
-    private readonly AuthOptions _authOptions;
-    private readonly IWebHostEnvironment _environment;
-
-    public AuthController(
-        IAuthService authService,
-        IJwtTokenService jwt,
-        IOptions<AuthOptions> authOptions,
-        IWebHostEnvironment environment)
-    {
-        _authService = authService;
-        _jwt = jwt;
-        _authOptions = authOptions.Value;
-        _environment = environment;
-    }
+    private readonly IAuthService _authService = authService;
+    private readonly IJwtTokenService _jwt = jwt;
+    private readonly IWebHostEnvironment _environment = environment;
 
     [HttpPost("register")]
     public async Task<ActionResult<RegisterResponse>> Register([FromBody] RegisterRequest request)
@@ -66,22 +53,34 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
-    private string GetClientIp()
+    private string? GetClientIp()
     {
         var forwarded = Request.Headers["X-Forwarded-For"].FirstOrDefault();
-        if (!string.IsNullOrWhiteSpace(forwarded))
+        if (!string.IsNullOrWhiteSpace(forwarded) &&
+            IPAddress.TryParse(forwarded.Split(',')[0].Trim(), out var forwardedIp))
         {
-            return forwarded.Split(',')[0].Trim();
+            return ToStoredClientIp(forwardedIp);
         }
 
-        return HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return ToStoredClientIp(HttpContext.Connection.RemoteIpAddress);
+    }
+
+    private static string? ToStoredClientIp(IPAddress? ip)
+    {
+        if (ip is null || IPAddress.IsLoopback(ip))
+        {
+            return null;
+        }
+
+        return ip.ToString();
     }
 
     private void SetAccessTokenCookie(string token)
     {
         var isProd = _environment.IsProduction();
+
         Response.Cookies.Append(
-            _authOptions.AccessTokenCookieName,
+            Environment.GetEnvironmentVariable("AUTH_ACCESS_TOKEN_COOKIE_NAME") ?? "access_token_spends360",
             token,
             new CookieOptions
             {
@@ -89,7 +88,7 @@ public class AuthController : ControllerBase
                 Secure = isProd,
                 SameSite = isProd ? SameSiteMode.None : SameSiteMode.Lax,
                 Path = "/",
-                MaxAge = TimeSpan.FromMinutes(_authOptions.AccessTokenMinutes),
+                MaxAge = TimeSpan.FromMinutes(int.TryParse(Environment.GetEnvironmentVariable("AUTH_ACCESS_TOKEN_MINUTES"), out var minutes) ? minutes : 100),
             });
     }
 }

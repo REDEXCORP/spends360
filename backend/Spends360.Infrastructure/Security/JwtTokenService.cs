@@ -1,7 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Spends360.Application.Interfaces;
@@ -17,7 +15,7 @@ public class JwtTokenService : IJwtTokenService
     public JwtTokenService(IOptions<JwtOptions> options)
     {
         _options = options.Value;
-        _signingKey = CreateSigningKey(_options.Secret);
+        _signingKey = JwtSigningKey.Create(_options.Secret);
     }
 
     public string GenerateAccessToken(long userId)
@@ -91,21 +89,5 @@ public class JwtTokenService : IJwtTokenService
                 ClockSkew = TimeSpan.FromMinutes(1),
             },
             out _);
-    }
-
-    private static SymmetricSecurityKey CreateSigningKey(string secret)
-    {
-        if (string.IsNullOrWhiteSpace(secret))
-        {
-            throw new InvalidOperationException("Jwt:Secret must be configured.");
-        }
-
-        var keyBytes = Encoding.UTF8.GetBytes(secret);
-        if (keyBytes.Length < 32)
-        {
-            keyBytes = SHA256.HashData(keyBytes);
-        }
-
-        return new SymmetricSecurityKey(keyBytes);
     }
 }

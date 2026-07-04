@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Spends360.Domain\Spends360.Domain.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.15" />
   </ItemGroup>
 
   <ItemGroup>
