@@ -31,8 +31,10 @@ export type {
 
 export const auth = {
     login: (body: unknown) => apiRequestV1.post('/auth/login', body),
-    register: (body: { email: string; password: string }) => apiRequestV1.post('/auth/register', body),
-    verifyRegister: (token: string) => apiRequestV1.post('/auth/verify-register', { token }),
+    register: (body: { email: string; password: string; confirmPassword: string }) =>
+        apiRequestV1.post('/auth/register', body),
+    verifyRegister: (body: { email: string; otp: string; password: string }) =>
+        apiRequestV1.post('/auth/verify-register', body),
     verifyOtp: (body: { email: string; otp: string; password: string }) => apiRequestV1.post('/auth/verify-otp', body),
     forgotPassword: (body: { email: string }) => apiRequestV1.post('/auth/forgot-password', body),
     resetPassword: (body: { email: string; otp: string; password: string }) => apiRequestV1.post('/auth/reset-password', body),

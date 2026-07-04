@@ -1,0 +1,1 @@
+# Use appsettings.Development.json for local values (Port, ConnectionStrings, Jwt, Smtp, AllowedOrigins).

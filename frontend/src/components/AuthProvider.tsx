@@ -5,7 +5,6 @@ import { useQuery } from '@tanstack/react-query';
 import { user } from '@/requests';
 import { ChildrenProps } from '@/helpers/interfaces';
 import Loading from './Loading';
-import CreateWorkSpace from './CreateWorkSpace';
 import { useRouter } from 'next/navigation';
 import { AuthContext } from '@/context/AuthContext';
 import { setProfile } from '@/store/slices/profileSlice';
@@ -30,8 +29,6 @@ export const AuthProvider: React.FC<ChildrenProps> = ({ children }) => {
     }, [loading, error, router]);
 
     if (loading || !profile) return <Loading />;
-
-    if (!profile.workspaces?.length) return <CreateWorkSpace />;
 
     dispatch(setProfile(profile));
 
