@@ -9,7 +9,6 @@ import { getUsernameFromEmail, removePassword } from '../utils';
 import { getDateWithOffset } from '../utils/dateUtils';
 import { sendEmail } from './emailService';
 import { buildOtpEmail } from '../templates/otpTemplate';
-import { buildRegisterVerificationEmail } from '../templates/registerVerificationTemplate';
 import { buildResetPasswordEmail } from '../templates/resetPasswordTemplate';
 import { LOGIN_OTP_INTERVAL_MS } from '../config/auth';
 
@@ -69,8 +68,8 @@ export const login = async (email: string, password: string, clientIp: string, r
     await usersRepository.update(user.id, { otp, otpExpiresAt });
 
     try {
-        const { html, text } = buildOtpEmail(otp);
-        await sendEmail({ to: normalizedEmail, subject: 'Reach: login verification code', html, text });
+        const { html, text } = buildOtpEmail(otp, 'login');
+        await sendEmail({ to: normalizedEmail, subject: 'Spends360: login verification code', html, text });
     } catch {
         throw new AppError('Failed to send OTP email. Please try again later.', 500);
     }
@@ -111,20 +110,32 @@ export const register = async (email: string, password: string) => {
         await createUserWithOwnWorkspace(normalizedEmail, passwordHash, false);
     }
 
-    const token = AuthService.generateRegistrationToken({ email: normalizedEmail });
+    const user = await usersRepository.getUserByEmail(normalizedEmail);
+    if (!user) {
+        throw new AppError('Failed to create account. Please try again.', 500);
+    }
 
-    const verifyLink = `${process.env.FRONTEND_URL}/register/verify?token=${encodeURIComponent(token)}`;
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiresAt = getDateWithOffset(10);
+
+    await usersRepository.update(user.id, { otp, otpExpiresAt });
 
     try {
-        const { html, text } = buildRegisterVerificationEmail(verifyLink);
-        await sendEmail({ to: normalizedEmail, subject: 'Reach: verify your email', html, text });
-    } catch (emailError: any) {
-        throw new AppError('Failed to send verification email. Please try again later.', 500);
+        const { html, text } = buildOtpEmail(otp, 'registration');
+        await sendEmail({
+            to: normalizedEmail,
+            subject: 'Spends360: registration verification code',
+            html,
+            text,
+        });
+    } catch {
+        throw new AppError('Failed to send OTP email. Please try again later.', 500);
     }
 
     return {
-        message: 'Verification link sent. Check your email to finish creating your account.',
+        message: 'OTP sent. Check your email to finish creating your account.',
         email: normalizedEmail,
+        requiresOtp: true,
     };
 };
 
@@ -144,24 +155,20 @@ async function createUserWithOwnWorkspace(email: string, passwordHash: string, i
         userId: user.id,
         workspaceId: workspace.id,
         role: 'ADMIN',
-        isDefault: true,
         inviteAccepted: true,
         createdBy: user.id,
         updatedBy: user.id,
     });
 
+    await workspaceMembersRepository.setDefaultWorkspace(user.id, workspace.id);
+
     return user;
 }
 
-export const verifyRegistration = async (token: string) => {
-    let payload;
-    try {
-        payload = AuthService.verifyRegistrationToken(token);
-    } catch {
-        throw new AppError('Invalid or expired verification link', 401);
-    }
+export const verifyRegistration = async (email: string, otp: string, clientIp: string, res: Response) => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await usersRepository.getUserByEmail(normalizedEmail);
 
-    const user = await usersRepository.getUserByEmail(payload.email);
     if (!user) {
         throw new AppError('Account not found. Please register again.', 400);
     }
@@ -170,10 +177,23 @@ export const verifyRegistration = async (token: string) => {
         throw new AppError('Email already verified. Please sign in.', 400);
     }
 
-    await usersRepository.update(user.id, { isVerified: true });
+    if (!user.otp || !user.otpExpiresAt || user.otp !== otp || new Date() > user.otpExpiresAt) {
+        throw new AppError('Invalid or expired OTP', 401);
+    }
+
+    await usersRepository.update(user.id, {
+        isVerified: true,
+        otp: null,
+        otpExpiresAt: null,
+    });
+
+    const verifiedUser = await usersRepository.getUserById(user.id);
+    const loggedInUser = await completeLogin(verifiedUser!, clientIp, res);
 
     return {
-        message: 'Email verified. You can now sign in.',
+        message: 'Email verified. Welcome!',
+        email: normalizedEmail,
+        user: loggedInUser,
     };
 };
 

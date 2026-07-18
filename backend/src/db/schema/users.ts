@@ -1,4 +1,5 @@
 import { pgTable, bigserial, bigint, varchar, timestamp, boolean, AnyPgColumn } from 'drizzle-orm/pg-core';
+import { workspaces } from './workspaces';
 
 export const users = pgTable('users', {
     id: bigserial({ mode: 'number' }).primaryKey(),
@@ -14,4 +15,5 @@ export const users = pgTable('users', {
     otpExpiresAt: timestamp({ withTimezone: true }),
     lastLoginAt: timestamp({ withTimezone: true }),
     lastLoginIp: varchar({ length: 45 }),
+    defaultWorkspaceId: bigint({ mode: 'number' }).references((): AnyPgColumn => workspaces.id, { onDelete: 'set null' }),
 });

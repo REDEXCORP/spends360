@@ -55,8 +55,11 @@ export const acceptWorkspaceInvite = async (
     await workspaceMembersRepository.update(membership.id, {
         inviteAccepted: true,
         updatedBy,
-        ...(!hasAcceptedWorkspace ? { isDefault: true } : {}),
     });
+
+    if (!hasAcceptedWorkspace) {
+        await workspaceMembersRepository.setDefaultWorkspace(userId, workspaceId);
+    }
 
     return true;
 };

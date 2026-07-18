@@ -18,13 +18,14 @@ export const getProfile = async (userId: number) => {
     }
 
     const profile = removePassword(profileRows[0].user);
+    const defaultWorkspaceId = profileRows[0].user.defaultWorkspaceId;
     const workspaces = profileRows
         .filter(row => row.workspaces && row.workspaceMembers?.inviteAccepted)
         .map(row => ({
             id: row.workspaces!.id,
             name: row.workspaces!.name,
             role: row.workspaceMembers!.role,
-            isDefault: row.workspaceMembers!.isDefault,
+            isDefault: row.workspaces!.id === defaultWorkspaceId,
             inviteAccepted: row.workspaceMembers!.inviteAccepted,
         }));
 
@@ -54,6 +55,7 @@ export const createWorkspace = async (userId: number, name: string) => {
         createdBy: userId,
         updatedBy: userId,
     });
+    await workspaceMembersRepository.ensureDefaultWorkspace(userId);
     return workspace;
 };
 
@@ -144,7 +146,6 @@ export const createUser = async (
         userId: invitedUser.id,
         workspaceId,
         role,
-        isDefault: false,
         inviteAccepted: false,
         createdBy: creatorId,
         updatedBy: creatorId,
@@ -243,23 +244,7 @@ export const deleteWorkspace = async (
         throw new AppError('Workspace not found', 404);
     }
 
-    const memberUserIds = await workspaceMembersRepository.listUserIdsByWorkspaceId(workspaceId);
-
-    for (const memberUserId of memberUserIds) {
-        const defaultMembership = await workspaceMembersRepository.getUserDefaultWorkspace(memberUserId);
-        const nextMembership =
-            defaultMembership && defaultMembership.workspaceId !== workspaceId
-                ? defaultMembership
-                : await workspaceMembersRepository.getUserFirstAcceptedWorkspaceExcluding(
-                      memberUserId,
-                      workspaceId
-                  );
-
-        if (nextMembership) {
-            await workspaceMembersRepository.setDefaultWorkspace(memberUserId, nextMembership.workspaceId);
-        }
-    }
-
+    // CASCADE deletes memberships; DB triggers repoint defaults / drop empty workspaces
     await workspaceRepository.remove(workspaceId);
 
     const user = await usersRepository.getUserById(userId);

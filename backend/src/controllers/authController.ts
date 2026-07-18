@@ -16,12 +16,13 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const verifyRegistration = asyncHandler(async (req: Request, res: Response) => {
-    const token = req.body?.token || req.query?.token;
-    if (!token || typeof token !== 'string') {
-        return res.status(400).json({ error: 'Verification token is required' });
+    const { email, otp } = req.body ?? {};
+    if (!email || typeof email !== 'string' || !otp || typeof otp !== 'string') {
+        return res.status(400).json({ error: 'Email and OTP are required' });
     }
 
-    const result = await authService.verifyRegistration(token);
+    const clientIp = getClientIp(req);
+    const result = await authService.verifyRegistration(email, otp, clientIp, res);
     return res.json(result);
 });
 

@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import { db } from '../db';
 import { users } from '../db/schema/users';
 import { workspaceMembers } from '../db/schema/workspaceMembers';
@@ -55,23 +55,40 @@ export const getUserProfileWithWorkspaces = async (id: number) => {
         .leftJoin(workspaceMembers, eq(users.id, workspaceMembers.userId))
         .leftJoin(workspaces, eq(workspaceMembers.workspaceId, workspaces.id))
         .where(eq(users.id, id))
-        .orderBy(desc(workspaceMembers.isDefault), desc(workspaceMembers.createdAt));
+        .orderBy(desc(workspaceMembers.createdAt));
 };
 
 export const getCurrentWorkspace = async (userId: number) => {
-    const result = await db
+    const viaDefault = await db
         .select({
             userId: workspaceMembers.userId,
             role: workspaceMembers.role,
             workspaceId: workspaceMembers.workspaceId,
-            isDefault: workspaceMembers.isDefault,
         })
-        .from(workspaceMembers)
-        .where(
-            and(eq(workspaceMembers.userId, userId), eq(workspaceMembers.inviteAccepted, true))
+        .from(users)
+        .innerJoin(
+            workspaceMembers,
+            and(
+                eq(workspaceMembers.userId, users.id),
+                eq(workspaceMembers.workspaceId, users.defaultWorkspaceId),
+                eq(workspaceMembers.inviteAccepted, true)
+            )
         )
-        .orderBy(desc(workspaceMembers.isDefault), desc(workspaceMembers.createdAt))
+        .where(eq(users.id, userId))
         .limit(1);
 
-    return result[0];
+    if (viaDefault[0]) return viaDefault[0];
+
+    const fallback = await db
+        .select({
+            userId: workspaceMembers.userId,
+            role: workspaceMembers.role,
+            workspaceId: workspaceMembers.workspaceId,
+        })
+        .from(workspaceMembers)
+        .where(and(eq(workspaceMembers.userId, userId), eq(workspaceMembers.inviteAccepted, true)))
+        .orderBy(asc(workspaceMembers.createdAt))
+        .limit(1);
+
+    return fallback[0];
 };

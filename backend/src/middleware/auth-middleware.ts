@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../infrastructure/auth';
+import { CookieConfig } from '../infrastructure/cookie';
 import { getCurrentWorkspace } from '../repositories/usersRepository';
 
 declare global {
@@ -16,7 +17,7 @@ declare global {
 
 export const authenticateToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const token = req.cookies?.access_token_reach;
+        const token = req.cookies?.[CookieConfig.ACCESS_TOKEN_COOKIE_NAME];
 
         if (!token || !process.env.JWT_SECRET) {
             return next({

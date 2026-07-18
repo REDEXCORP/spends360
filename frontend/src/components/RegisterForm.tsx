@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { RegisterFormValues } from '@/helpers/types';
 import { registerSchema } from '@/helpers/validation';
 import { Loader2 } from 'lucide-react';
@@ -19,20 +21,24 @@ const inputClassName =
     'h-11 border-gray-300 bg-white transition-colors focus:border-primary dark:border-border dark:bg-background';
 
 export default function RegisterForm() {
-    const [emailSent, setEmailSent] = useState(false);
-    const [sentEmail, setSentEmail] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
+    const router = useRouter();
+    const [showOtp, setShowOtp] = useState(false);
+    const [email, setEmail] = useState('');
+    const [otp, setOtp] = useState('');
 
     const registerMutation = useMutation({
         mutationFn: auth.register,
-        onSuccess: data => {
-            setSentEmail(data.email);
-            setSuccessMessage(
-                data.message ??
-                    'We sent a verification link to your email. Click the link within 10 minutes to finish creating your account.'
-            );
-            setEmailSent(true);
+        onSuccess: (data: { email?: string }, variables: { email: string; password: string }) => {
+            setEmail(data.email || variables.email);
+            setShowOtp(true);
+            setOtp('');
         },
+        onError: (error: unknown) => toastError(error),
+    });
+
+    const verifyRegisterMutation = useMutation({
+        mutationFn: auth.verifyRegister,
+        onSuccess: () => router.push('/'),
         onError: (error: unknown) => toastError(error),
     });
 
@@ -45,18 +51,60 @@ export default function RegisterForm() {
         },
     });
 
-    if (emailSent) {
+    const handleVerifyOtp = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (otp.length !== 6) return;
+        verifyRegisterMutation.mutate({ email, otp });
+    };
+
+    if (showOtp) {
         return (
             <div className="mx-auto w-full max-w-md p-8">
-                <p className="mt-4 text-sm text-muted-foreground">
-                    {successMessage} Sent to <strong>{sentEmail}</strong>.
-                </p>
-                <p className="mt-6 text-center text-sm text-muted-foreground">
-                    Already verified?{' '}
-                    <Link href="/login" className="text-primary hover:underline">
-                        Sign in
-                    </Link>
-                </p>
+                <AuthFormHeader title="Check your email" />
+                <div className="space-y-6">
+                    <p className="text-sm text-muted-foreground">
+                        We&apos;ve sent a 6-digit code to <strong>{email}</strong>
+                    </p>
+                    <form onSubmit={handleVerifyOtp} className="space-y-6">
+                        <div className="flex justify-center">
+                            <InputOTP maxLength={6} value={otp} onChange={value => setOtp(value)} autoFocus>
+                                <InputOTPGroup className="gap-2">
+                                    {Array.from({ length: 6 }).map((_, index) => (
+                                        <InputOTPSlot
+                                            key={index}
+                                            index={index}
+                                            className="h-12 w-10 rounded-md border text-lg md:h-14 md:w-12"
+                                        />
+                                    ))}
+                                </InputOTPGroup>
+                            </InputOTP>
+                        </div>
+
+                        <Button
+                            type="submit"
+                            disabled={verifyRegisterMutation.isPending || otp.length !== 6}
+                            className="h-11 w-full bg-[#492FA6] text-white hover:bg-[#492FA6]/90 transition-all duration-300"
+                        >
+                            {verifyRegisterMutation.isPending ? (
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                                'Verify email'
+                            )}
+                        </Button>
+
+                        <Button
+                            type="button"
+                            variant="link"
+                            onClick={() => {
+                                setShowOtp(false);
+                                setOtp('');
+                            }}
+                            className="w-full text-muted-foreground"
+                        >
+                            Back to register
+                        </Button>
+                    </form>
+                </div>
             </div>
         );
     }
@@ -137,7 +185,7 @@ export default function RegisterForm() {
                         {registerMutation.isPending ? (
                             <Loader2 className="h-5 w-5 animate-spin" />
                         ) : (
-                            'Send verification email'
+                            'Send verification code'
                         )}
                     </Button>
 

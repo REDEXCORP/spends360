@@ -1,20 +1,24 @@
 import { buildEmailHtml, buildEmailText, formatHtmlCode } from './emailLayout';
 
-export function buildOtpEmail(otp: string) {
+type OtpPurpose = 'login' | 'registration';
+
+export function buildOtpEmail(otp: string, purpose: OtpPurpose = 'login') {
+    const purposeLabel = purpose === 'registration' ? 'registration' : 'login';
+
     const html = buildEmailHtml(`
 <p>Hello,</p>
-<p>Your Reach login code is:</p>
+<p>Your Spends360 ${purposeLabel} code is:</p>
 ${formatHtmlCode(otp)}
-<p>This code expires in 5 minutes.</p>
+<p>This code expires in ${purpose === 'registration' ? '10' : '5'} minutes.</p>
 `);
 
     const text = buildEmailText(`Hello,
 
-Your Reach login code is:
+Your Spends360 ${purposeLabel} code is:
 
 ${otp}
 
-This code expires in 5 minutes.`);
+This code expires in ${purpose === 'registration' ? '10' : '5'} minutes.`);
 
     return { html, text };
 }

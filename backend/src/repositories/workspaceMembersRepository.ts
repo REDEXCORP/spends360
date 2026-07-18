@@ -1,5 +1,6 @@
-import { eq, and, ne } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
 import { db } from '../db';
+import { users } from '../db/schema/users';
 import { workspaceMembers } from '../db/schema/workspaceMembers';
 
 export type WorkspaceMemberInsert = typeof workspaceMembers.$inferInsert;
@@ -11,44 +12,27 @@ export const create = async (data: WorkspaceMemberInsert) => {
 
 export const getUserDefaultWorkspace = async (userId: number) => {
     const result = await db
-        .select()
-        .from(workspaceMembers)
-        .where(
+        .select({ membership: workspaceMembers })
+        .from(users)
+        .innerJoin(
+            workspaceMembers,
             and(
-                eq(workspaceMembers.userId, userId),
-                eq(workspaceMembers.isDefault, true),
+                eq(workspaceMembers.userId, users.id),
+                eq(workspaceMembers.workspaceId, users.defaultWorkspaceId),
                 eq(workspaceMembers.inviteAccepted, true)
             )
         )
+        .where(eq(users.id, userId))
         .limit(1);
-    return result[0];
+    return result[0]?.membership;
 };
 
 export const getUserFirstAcceptedWorkspace = async (userId: number) => {
     const result = await db
         .select()
         .from(workspaceMembers)
-        .where(
-            and(eq(workspaceMembers.userId, userId), eq(workspaceMembers.inviteAccepted, true))
-        )
-        .limit(1);
-    return result[0];
-};
-
-export const getUserFirstAcceptedWorkspaceExcluding = async (
-    userId: number,
-    excludeWorkspaceId: number
-) => {
-    const result = await db
-        .select()
-        .from(workspaceMembers)
-        .where(
-            and(
-                eq(workspaceMembers.userId, userId),
-                eq(workspaceMembers.inviteAccepted, true),
-                ne(workspaceMembers.workspaceId, excludeWorkspaceId)
-            )
-        )
+        .where(and(eq(workspaceMembers.userId, userId), eq(workspaceMembers.inviteAccepted, true)))
+        .orderBy(asc(workspaceMembers.createdAt))
         .limit(1);
     return result[0];
 };
@@ -57,9 +41,7 @@ export const getPendingInvitesByUserId = async (userId: number) => {
     return db
         .select()
         .from(workspaceMembers)
-        .where(
-            and(eq(workspaceMembers.userId, userId), eq(workspaceMembers.inviteAccepted, false))
-        );
+        .where(and(eq(workspaceMembers.userId, userId), eq(workspaceMembers.inviteAccepted, false)));
 };
 
 export const getWorkspaceMember = async (userId: number, workspaceId: number) => {
@@ -83,14 +65,11 @@ export const update = async (id: number, data: Partial<WorkspaceMemberInsert>) =
 };
 
 export const setDefaultWorkspace = async (userId: number, workspaceId: number) => {
-    const result = await db
-        .update(workspaceMembers)
-        .set({ isDefault: true, updatedBy: userId })
-        .where(
-            and(eq(workspaceMembers.userId, userId), eq(workspaceMembers.workspaceId, workspaceId))
-        )
-        .returning();
-    return result[0];
+    await db
+        .update(users)
+        .set({ defaultWorkspaceId: workspaceId, updatedAt: new Date() })
+        .where(eq(users.id, userId));
+    return getWorkspaceMember(userId, workspaceId);
 };
 
 export const remove = async (userId: number, workspaceId: number) => {
@@ -126,7 +105,13 @@ export const ensureDefaultWorkspace = async (userId: number) => {
     if (currentDefault) return currentDefault;
 
     const firstAccepted = await getUserFirstAcceptedWorkspace(userId);
-    if (!firstAccepted) return null;
+    if (!firstAccepted) {
+        await db
+            .update(users)
+            .set({ defaultWorkspaceId: null, updatedAt: new Date() })
+            .where(eq(users.id, userId));
+        return null;
+    }
 
     await setDefaultWorkspace(userId, firstAccepted.workspaceId);
     return firstAccepted;
