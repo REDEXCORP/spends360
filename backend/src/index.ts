@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import router from './routes';
+import paddleWebhookRoutes from './routes/paddleWebhook';
 import { errorHandler } from './middleware/error-handler';
 
 const app = express();
@@ -18,6 +19,8 @@ app.use(
         credentials: true,
     })
 );
+
+app.use('/api/webhooks/paddle', paddleWebhookRoutes);
 
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));

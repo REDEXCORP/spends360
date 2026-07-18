@@ -89,22 +89,3 @@ export const deleteWorkspace = asyncHandler(async (req: Request, res: Response) 
     const result = await userService.deleteWorkspace(userId, workspaceId, res);
     return res.json(result);
 });
-
-export const activateSubscription = asyncHandler(async (req: Request, res: Response) => {
-    const { userId, workspaceId } = authenticatedUser(req);
-    if (!workspaceId) {
-        throw new AppError('No active workspace', 400);
-    }
-
-    const { billing, users, paddleSubscriptionId } = req.body ?? {};
-    if (billing !== 'monthly' && billing !== 'yearly') {
-        throw new AppError('billing must be monthly or yearly', 400);
-    }
-
-    const result = await userService.activateSubscription(userId, workspaceId, {
-        billing,
-        users: Number(users),
-        paddleSubscriptionId,
-    });
-    return res.json(result);
-});

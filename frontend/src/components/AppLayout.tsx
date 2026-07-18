@@ -6,16 +6,13 @@ import { IconLayoutSidebar, IconMenu2, IconX } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SidebarNav } from '@/components/SidebarNav';
-import SidebarSectionSwitcher from '@/components/SidebarSectionSwitcher';
 import WorkspaceSwitcher from '@/components/WorkspaceSwitcher';
 import UserMenu from '@/components/UserMenu';
-import { SidebarSectionProvider } from '@/context/SidebarSectionContext';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
 function SidebarShell({ onClose }: { onClose?: () => void }) {
     return (
-        <SidebarSectionProvider>
         <div className="flex h-full flex-col bg-white/95 backdrop-blur-sm">
             <div className="flex items-center justify-between gap-2 px-4 pt-4">
                 <div className="flex items-center gap-3 px-1">
@@ -42,12 +39,10 @@ function SidebarShell({ onClose }: { onClose?: () => void }) {
                 <SidebarNav />
             </ScrollArea>
 
-            <div className="space-y-2 border-t border-neutral-100 p-3">
-                <SidebarSectionSwitcher />
+            <div className="border-t border-neutral-100 p-3">
                 <UserMenu />
             </div>
         </div>
-        </SidebarSectionProvider>
     );
 }
 

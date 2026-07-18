@@ -5,13 +5,15 @@ NEXT_PUBLIC_APP_NAME=Spends360
 NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
 ```
 
-## Paddle checkout
+## Paddle checkout + webhook
 
-Paddle values are hardcoded at the top of `src/app/subscribe/page.tsx` for now.
+1. Paste client token + price IDs in `frontend/src/app/subscribe/page.tsx`
+2. Paste API key + webhook secret in `backend/src/config/paddle.ts`
+3. In Paddle → **Developer Tools → Notifications**, create a destination:
+   - URL: `https://YOUR_PUBLIC_URL/api/webhooks/paddle`
+   - Events: `subscription.created`, `subscription.activated`, `subscription.updated`, `subscription.canceled`, `subscription.past_due`, `subscription.paused`, `transaction.completed`
+4. For local testing, expose the API with ngrok:
+   `ngrok http 4000`
+   then use `https://xxxx.ngrok.io/api/webhooks/paddle`
 
-1. Create a [Paddle sandbox](https://sandbox-vendors.paddle.com/) account.
-2. Create product **Spends360** with 4 prices (monthly/yearly base + seat).
-3. Paste client token + price IDs into the constants in `subscribe/page.tsx`.
-4. Set **Default payment link** to `http://localhost:3000`.
-
-Test card: `4242 4242 4242 4242`, any future expiry, CVC `100`.
+On payment, Paddle sends a webhook → workspace `subscription_status` becomes `active`. No `/subscription/activate` API.

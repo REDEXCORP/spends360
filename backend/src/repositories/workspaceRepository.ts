@@ -36,7 +36,7 @@ export const activateSubscription = async (
         subscriptionInterval: 'month' | 'year';
         userCount: number;
         paddleSubscriptionId?: string | null;
-        updatedBy: number;
+        updatedBy?: number | null;
     }
 ) => {
     const result = await db
@@ -46,7 +46,24 @@ export const activateSubscription = async (
             subscriptionInterval: data.subscriptionInterval,
             userCount: data.userCount,
             paddleSubscriptionId: data.paddleSubscriptionId ?? null,
-            updatedBy: data.updatedBy,
+            updatedBy: data.updatedBy ?? null,
+            updatedAt: new Date(),
+        })
+        .where(eq(workspaces.id, id))
+        .returning();
+    return result[0];
+};
+
+export const updateSubscriptionStatus = async (
+    id: number,
+    status: 'active' | 'inactive' | 'trialing' | 'canceled' | 'past_due' | 'paused',
+    paddleSubscriptionId?: string | null
+) => {
+    const result = await db
+        .update(workspaces)
+        .set({
+            subscriptionStatus: status,
+            paddleSubscriptionId: paddleSubscriptionId ?? undefined,
             updatedAt: new Date(),
         })
         .where(eq(workspaces.id, id))

@@ -19,7 +19,7 @@ export const getProfile = async (userId: number) => {
 
     const profile = removePassword(profileRows[0].user);
     const defaultWorkspaceId = profileRows[0].user.defaultWorkspaceId;
-    
+
     const workspaces = profileRows
         .filter(row => row.workspaces && row.workspaceMembers?.inviteAccepted)
         .map(row => ({
@@ -33,58 +33,15 @@ export const getProfile = async (userId: number) => {
             userCount: row.workspaces!.userCount,
         }));
 
+    const activeWorkspace =
+        workspaces.find(workspace => workspace.isDefault) ?? workspaces[0];
+
     return {
         ...profile,
+        role: activeWorkspace?.role ?? null,
+        workspaceId: activeWorkspace?.id ?? null,
+        subscriptionStatus: activeWorkspace?.subscriptionStatus ?? 'inactive',
         workspaces,
-    };
-};
-
-export const activateSubscription = async (
-    userId: number,
-    workspaceId: number,
-    body: { billing: 'monthly' | 'yearly'; users: number; paddleSubscriptionId?: string }
-) => {
-    const membership = await workspaceMembersRepository.getWorkspaceMember(userId, workspaceId);
-    if (!membership || !membership.inviteAccepted) {
-        throw new AppError('Workspace not found', 404);
-    }
-    if (membership.role !== 'ADMIN') {
-        throw new AppError('Only workspace admins can manage billing', 403);
-    }
-
-    const workspace = await workspaceRepository.getById(workspaceId);
-    if (!workspace) {
-        throw new AppError('Workspace not found', 404);
-    }
-
-    if (workspace.subscriptionStatus === 'active') {
-        return {
-            message: 'Workspace already subscribed',
-            workspace: {
-                id: workspace.id,
-                subscriptionStatus: workspace.subscriptionStatus,
-                subscriptionInterval: workspace.subscriptionInterval,
-                userCount: workspace.userCount,
-            },
-        };
-    }
-
-    const users = Math.min(50, Math.max(5, Number(body.users) || 5));
-    const updated = await workspaceRepository.activateSubscription(workspaceId, {
-        subscriptionInterval: body.billing === 'yearly' ? 'year' : 'month',
-        userCount: users,
-        paddleSubscriptionId: body.paddleSubscriptionId ?? null,
-        updatedBy: userId,
-    });
-
-    return {
-        message: 'Subscription activated',
-        workspace: {
-            id: updated.id,
-            subscriptionStatus: updated.subscriptionStatus,
-            subscriptionInterval: updated.subscriptionInterval,
-            userCount: updated.userCount,
-        },
     };
 };
 

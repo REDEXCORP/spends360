@@ -2,20 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { navGroups } from '@/constants/navGroups';
-import { useSidebarSection } from '@/context/SidebarSectionContext';
+import { navItems } from '@/constants/navGroups';
 import { cn } from '@/lib/utils';
 
 const BRAND = '#492FA6';
 
 export function SidebarNav() {
     const pathname = usePathname();
-    const { section } = useSidebarSection();
-    const items = navGroups[section];
 
     return (
         <nav className="flex flex-col gap-0.5 px-3">
-            {items.map(item => {
+            {navItems.map(item => {
                 const IconComp = item.icon;
                 const active = pathname === item.url;
 

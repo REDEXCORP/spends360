@@ -61,10 +61,7 @@ export default function SubscribePage() {
     const [paddle, setPaddle] = useState<Paddle | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const selectionRef = useRef({ yearly: true, users: 5 });
     const activatingRef = useRef(false);
-
-    selectionRef.current = { yearly, users };
 
     const {
         data: profile,
@@ -78,16 +75,25 @@ export default function SubscribePage() {
     });
 
     const total = calcTotal(users, yearly);
+    const workspaceId =
+        profile?.workspaceId ??
+        profile?.workspaces?.find((w: { isDefault?: boolean }) => w.isDefault)?.id ??
+        profile?.workspaces?.[0]?.id ??
+        null;
+    const subscriptionStatus =
+        profile?.subscriptionStatus ??
+        profile?.workspaces?.find((w: { id?: number }) => w.id === workspaceId)?.subscriptionStatus ??
+        'inactive';
 
     useEffect(() => {
         if (profileError) router.replace('/login');
     }, [profileError, router]);
 
     useEffect(() => {
-        if (profile?.subscriptionStatus === 'active') {
+        if (subscriptionStatus === 'active') {
             router.replace('/');
         }
-    }, [profile, router]);
+    }, [subscriptionStatus, router]);
 
     useEffect(() => {
         void initializePaddle({
@@ -98,25 +104,24 @@ export default function SubscribePage() {
                 if (activatingRef.current) return;
                 activatingRef.current = true;
 
-                const { yearly: isYearly, users: seatCount } = selectionRef.current;
-                const paddleSubscriptionId =
-                    (event.data as { subscription_id?: string } | undefined)?.subscription_id;
+                toastSuccess('Payment received. Activating your workspace…');
 
-                void user
-                    .activateSubscription({
-                        billing: isYearly ? 'yearly' : 'monthly',
-                        users: seatCount,
-                        paddleSubscriptionId,
-                    })
-                    .then(async () => {
-                        await queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-                        toastSuccess('Subscription successful');
-                        router.push('/');
-                    })
-                    .catch((err: unknown) => {
-                        activatingRef.current = false;
-                        toastError(err);
-                    });
+                void (async () => {
+                    for (let i = 0; i < 15; i++) {
+                        await new Promise(r => setTimeout(r, 1500));
+                        const fresh = await queryClient.fetchQuery({
+                            queryKey: ['user-profile'],
+                            queryFn: () => user.profile(),
+                        });
+                        if (fresh?.subscriptionStatus === 'active') {
+                            toastSuccess('Subscription successful');
+                            router.push('/');
+                            return;
+                        }
+                    }
+                    activatingRef.current = false;
+                    toastError('Payment received, but activation is still pending. Refresh in a moment.');
+                })();
             },
         }).then((instance) => {
             if (instance) setPaddle(instance);
@@ -131,7 +136,12 @@ export default function SubscribePage() {
             return;
         }
 
-        if (profile?.subscriptionStatus === 'active') {
+        if (!workspaceId) {
+            setError('No workspace found. Please refresh and try again.');
+            return;
+        }
+
+        if (subscriptionStatus === 'active') {
             router.replace('/');
             return;
         }
@@ -143,7 +153,7 @@ export default function SubscribePage() {
             paddle.Checkout.open({
                 items,
                 customData: {
-                    workspaceId: String(profile?.workspaceId ?? ''),
+                    workspaceId: String(workspaceId),
                     users: String(users),
                     billing: yearly ? 'yearly' : 'monthly',
                 },
@@ -158,9 +168,9 @@ export default function SubscribePage() {
         } finally {
             setLoading(false);
         }
-    }, [paddle, users, yearly, profile, router]);
+    }, [paddle, users, yearly, workspaceId, subscriptionStatus, router]);
 
-    if (profileLoading || !profile || profile.subscriptionStatus === 'active') {
+    if (profileLoading || !profile || subscriptionStatus === 'active') {
         return <Loading />;
     }
 
