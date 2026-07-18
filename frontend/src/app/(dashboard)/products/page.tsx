@@ -87,7 +87,7 @@ export default function ProductsPage() {
                                     id="name"
                                     value={form.name}
                                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                                    placeholder="Spends360 AI Dialer"
+                                    placeholder="Reach AI Dialer"
                                     required
                                 />
                             </div>

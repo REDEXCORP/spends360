@@ -1,22 +1,3 @@
-## Visual Studio / IDE
-.vs/
-.vscode/
-*.user
-*.suo
-*.userosscache
-*.sln.docstates
-
-## Build output
-bin/
-obj/
-out/
-[Dd]ebug/
-[Rr]elease/
-
-## Environment
 .env
-.env.*
-
-## OS
-.DS_Store
-Thumbs.db
+node_modules
+.cache

@@ -157,7 +157,7 @@ export default function LoginForm() {
                         <Button
                             type="submit"
                             disabled={loginMutation.isPending}
-                            className="h-11 w-full bg-[#492FA6] text-white hover:bg-[#492FA6]/90 transition-all duration-300"
+                            className="h-11 w-full bg-[#264653] text-white hover:bg-[#264653]/90 transition-all duration-300"
                         >
                             {loginMutation.isPending ? (
                                 <Loader2 className="h-5 w-5 animate-spin" />

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { ReactNode } from 'react';
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
@@ -5,12 +6,9 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
     return (
         <section className="flex min-h-screen flex-col lg:flex-row">
-            <div className="hidden lg:flex lg:h-screen lg:w-1/2 lg:items-center lg:justify-center lg:rounded-br-3xl lg:rounded-tr-3xl lg:bg-[#492FA6]">
+            <div className="hidden lg:flex lg:h-screen lg:w-1/2 lg:items-center lg:justify-center lg:bg-[#edede9]">
                 <div className="flex flex-col items-center px-4 text-center">
-                    <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-lg bg-white">
-                        <span className="text-2xl font-bold text-[#6B46C1]">Dt</span>
-                    </div>
-                    <h1 className="text-2xl font-semibold text-white">{appName}</h1>
+                    <Image src="/logo.svg" alt="Logo" width={100} height={100} className="h-full w-full object-contain" />
                 </div>
             </div>
             <div className="flex flex-1 items-center justify-center bg-background px-4 py-10 lg:w-1/2 lg:px-8">

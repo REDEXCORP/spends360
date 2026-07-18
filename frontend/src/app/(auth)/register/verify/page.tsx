@@ -3,7 +3,7 @@ import RegisterVerifyClient from '@/components/RegisterVerifyClient';
 
 export const metadata = {
     title: 'Verify account',
-    description: 'Verify your Spends360 account',
+    description: 'Verify your Reach account',
 };
 
 export default function RegisterVerifyPage() {
