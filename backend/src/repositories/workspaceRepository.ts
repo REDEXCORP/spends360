@@ -30,6 +30,30 @@ export const getById = async (id: number) => {
     return result[0];
 };
 
+export const activateSubscription = async (
+    id: number,
+    data: {
+        subscriptionInterval: 'month' | 'year';
+        userCount: number;
+        paddleSubscriptionId?: string | null;
+        updatedBy: number;
+    }
+) => {
+    const result = await db
+        .update(workspaces)
+        .set({
+            subscriptionStatus: 'active',
+            subscriptionInterval: data.subscriptionInterval,
+            userCount: data.userCount,
+            paddleSubscriptionId: data.paddleSubscriptionId ?? null,
+            updatedBy: data.updatedBy,
+            updatedAt: new Date(),
+        })
+        .where(eq(workspaces.id, id))
+        .returning();
+    return result[0];
+};
+
 export const remove = async (id: number) => {
     const result = await db.delete(workspaces).where(eq(workspaces.id, id)).returning();
     return result[0];

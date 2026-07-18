@@ -27,6 +27,9 @@ export const getProfile = async (userId: number) => {
             role: row.workspaceMembers!.role,
             isDefault: row.workspaces!.id === defaultWorkspaceId,
             inviteAccepted: row.workspaceMembers!.inviteAccepted,
+            subscriptionStatus: row.workspaces!.subscriptionStatus,
+            subscriptionInterval: row.workspaces!.subscriptionInterval,
+            userCount: row.workspaces!.userCount,
         }));
 
     const activeWorkspaceId =
@@ -41,7 +44,58 @@ export const getProfile = async (userId: number) => {
         ...profile,
         role: activeWorkspace?.role ?? null,
         workspaceId: activeWorkspaceId ?? null,
+        subscriptionStatus: activeWorkspace?.subscriptionStatus ?? 'inactive',
         workspaces,
+    };
+};
+
+export const activateSubscription = async (
+    userId: number,
+    workspaceId: number,
+    body: { billing: 'monthly' | 'yearly'; users: number; paddleSubscriptionId?: string }
+) => {
+    const membership = await workspaceMembersRepository.getWorkspaceMember(userId, workspaceId);
+    if (!membership || !membership.inviteAccepted) {
+        throw new AppError('Workspace not found', 404);
+    }
+    if (membership.role !== 'ADMIN') {
+        throw new AppError('Only workspace admins can manage billing', 403);
+    }
+
+    const workspace = await workspaceRepository.getById(workspaceId);
+    if (!workspace) {
+        throw new AppError('Workspace not found', 404);
+    }
+
+    // One subscription per workspace — already active is a no-op success
+    if (workspace.subscriptionStatus === 'active') {
+        return {
+            message: 'Workspace already subscribed',
+            workspace: {
+                id: workspace.id,
+                subscriptionStatus: workspace.subscriptionStatus,
+                subscriptionInterval: workspace.subscriptionInterval,
+                userCount: workspace.userCount,
+            },
+        };
+    }
+
+    const users = Math.min(50, Math.max(5, Number(body.users) || 5));
+    const updated = await workspaceRepository.activateSubscription(workspaceId, {
+        subscriptionInterval: body.billing === 'yearly' ? 'year' : 'month',
+        userCount: users,
+        paddleSubscriptionId: body.paddleSubscriptionId ?? null,
+        updatedBy: userId,
+    });
+
+    return {
+        message: 'Subscription activated',
+        workspace: {
+            id: updated.id,
+            subscriptionStatus: updated.subscriptionStatus,
+            subscriptionInterval: updated.subscriptionInterval,
+            userCount: updated.userCount,
+        },
     };
 };
 

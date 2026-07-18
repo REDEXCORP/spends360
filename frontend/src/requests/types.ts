@@ -9,7 +9,9 @@ export interface WorkspaceSummary {
     role: string;
     isDefault: boolean | null;
     inviteAccepted: boolean | null;
-    plan: string | null;
+    subscriptionStatus?: 'active' | 'inactive' | 'trialing' | 'canceled' | 'past_due' | 'paused';
+    subscriptionInterval?: 'month' | 'year';
+    userCount?: number;
 }
 
 export interface TelnyxConfigForm {

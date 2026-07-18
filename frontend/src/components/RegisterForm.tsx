@@ -38,7 +38,7 @@ export default function RegisterForm() {
 
     const verifyRegisterMutation = useMutation({
         mutationFn: auth.verifyRegister,
-        onSuccess: () => router.push('/'),
+        onSuccess: () => router.push('/subscribe'),
         onError: (error: unknown) => toastError(error),
     });
 

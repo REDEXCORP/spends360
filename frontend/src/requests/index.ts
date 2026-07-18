@@ -50,6 +50,11 @@ export const user = {
     acceptInvite: (token: string) => apiRequestV1.post('/user/invite/accept', { token }),
     createWorkspace: (body: { name: string }) => apiRequestV1.post('/user/workspace', body),
     switchWorkspace: (workspaceId: number) => apiRequestV1.put(`/user/workspace/${workspaceId}`, {}),
+    activateSubscription: (body: {
+        billing: 'monthly' | 'yearly';
+        users: number;
+        paddleSubscriptionId?: string;
+    }) => apiRequestV1.post('/user/subscription/activate', body),
 };
 
 export const calls = {
