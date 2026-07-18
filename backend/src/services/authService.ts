@@ -22,12 +22,9 @@ const requiresLoginOtp = (user: { lastLoginAt?: Date | null; lastLoginIp?: strin
 };
 
 export const generateTokensAndSetCookies = async (user: any, res: Response) => {
-    const membership =
-        (await workspaceMembersRepository.getUserDefaultWorkspace(user.id)) ??
-        (await workspaceMembersRepository.getUserFirstAcceptedWorkspace(user.id));
-    const workspaceId = membership?.workspaceId ?? null;
-    const role = membership?.role ?? null;
-    const accessToken = AuthService.generateAccessToken(user.id, role, workspaceId);
+    const membership = await workspaceMembersRepository.getUserDefaultWorkspace(user.id);
+    
+    const accessToken = AuthService.generateAccessToken(user.id, membership.role, membership.workspaceId);
 
     CookieConfig.setCookie(res, CookieConfig.ACCESS_TOKEN_COOKIE_NAME, accessToken, 100 * 60 * 1000);
 
@@ -107,7 +104,7 @@ export const register = async (email: string, password: string) => {
 
         await usersRepository.update(existingUser.id, { password: passwordHash });
     } else {
-        await createUserWithOwnWorkspace(normalizedEmail, passwordHash, false);
+        await usersRepository.create({ email: normalizedEmail, password: passwordHash, isVerified: false });
     }
 
     const user = await usersRepository.getUserByEmail(normalizedEmail);
@@ -139,30 +136,21 @@ export const register = async (email: string, password: string) => {
     };
 };
 
-async function createUserWithOwnWorkspace(email: string, passwordHash: string, isVerified = false) {
+async function createWorkspaceForUser(userId: number, email: string) {
+
     const workspaceName = `${getUsernameFromEmail(email)}'s Workspace`;
-    const workspace = await workspaceRepository.create(workspaceName);
-
-    const user = await usersRepository.create({
-        email,
-        password: passwordHash,
-        isVerified,
-    });
-
-    await workspaceRepository.updateOwner(workspace.id, user.id);
+    const workspace = await workspaceRepository.create(workspaceName, userId);
 
     await workspaceMembersRepository.create({
-        userId: user.id,
+        userId,
         workspaceId: workspace.id,
         role: 'ADMIN',
         inviteAccepted: true,
-        createdBy: user.id,
-        updatedBy: user.id,
+        createdBy: userId,
+        updatedBy: userId,
     });
 
-    await workspaceMembersRepository.setDefaultWorkspace(user.id, workspace.id);
-
-    return user;
+    return await workspaceMembersRepository.setDefaultWorkspace(userId, workspace.id);
 }
 
 export const verifyRegistration = async (email: string, otp: string, clientIp: string, res: Response) => {
@@ -181,11 +169,8 @@ export const verifyRegistration = async (email: string, otp: string, clientIp: s
         throw new AppError('Invalid or expired OTP', 401);
     }
 
-    await usersRepository.update(user.id, {
-        isVerified: true,
-        otp: null,
-        otpExpiresAt: null,
-    });
+    await usersRepository.update(user.id, { isVerified: true, otp: null, otpExpiresAt: null });
+    await createWorkspaceForUser(user.id, normalizedEmail);
 
     const verifiedUser = await usersRepository.getUserById(user.id);
     const loggedInUser = await completeLogin(verifiedUser!, clientIp, res);
@@ -206,18 +191,13 @@ export const forgotPassword = async (email: string) => {
 
         await usersRepository.update(user.id, { otp, otpExpiresAt });
 
-        try {
-            const { html, text } = buildResetPasswordEmail(otp);
-            await sendEmail({
-                to: email,
-                subject: 'Reach: password reset code',
-                html,
-                text,
-            });
-        } catch (emailError: any) {
-            console.error('Failed to send reset email:', emailError.message || emailError);
-            throw new AppError('Failed to send reset email. Please try again later.', 500);
-        }
+        const { html, text } = buildResetPasswordEmail(otp);
+        await sendEmail({
+            to: email,
+            subject: 'Reach: password reset code',
+            html,
+            text,
+        });
     }
 
     return {

@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../infrastructure/auth';
 import { CookieConfig } from '../infrastructure/cookie';
-import { getCurrentWorkspace } from '../repositories/usersRepository';
 
 declare global {
     namespace Express {
@@ -27,12 +26,11 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         }
 
         const decoded = AuthService.validateAndExtractClaims(token, process.env.JWT_SECRET!);
-        const membership = await getCurrentWorkspace(parseInt(decoded.sub));
 
         req.user = {
             userId: parseInt(decoded.sub),
-            workspaceId: membership?.workspaceId ?? decoded.workspaceId ?? null,
-            role: membership?.role ?? decoded.role ?? null,
+            workspaceId: Number(decoded.workspaceId),
+            role: String(decoded.role),
         };
 
         next();

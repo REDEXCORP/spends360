@@ -19,6 +19,7 @@ export const getProfile = async (userId: number) => {
 
     const profile = removePassword(profileRows[0].user);
     const defaultWorkspaceId = profileRows[0].user.defaultWorkspaceId;
+    
     const workspaces = profileRows
         .filter(row => row.workspaces && row.workspaceMembers?.inviteAccepted)
         .map(row => ({
@@ -32,19 +33,8 @@ export const getProfile = async (userId: number) => {
             userCount: row.workspaces!.userCount,
         }));
 
-    const activeWorkspaceId =
-        workspaces.find(workspace => workspace.isDefault)?.id ?? workspaces[0]?.id;
-
-    const activeWorkspace =
-        workspaces.find(workspace => workspace.isDefault) ??
-        (activeWorkspaceId ? workspaces.find(workspace => workspace.id === activeWorkspaceId) : undefined) ??
-        workspaces[0];
-
     return {
         ...profile,
-        role: activeWorkspace?.role ?? null,
-        workspaceId: activeWorkspaceId ?? null,
-        subscriptionStatus: activeWorkspace?.subscriptionStatus ?? 'inactive',
         workspaces,
     };
 };
@@ -67,7 +57,6 @@ export const activateSubscription = async (
         throw new AppError('Workspace not found', 404);
     }
 
-    // One subscription per workspace — already active is a no-op success
     if (workspace.subscriptionStatus === 'active') {
         return {
             message: 'Workspace already subscribed',

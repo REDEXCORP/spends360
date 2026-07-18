@@ -1,5 +1,5 @@
 {
-  "id": "be2d2aec-a0a8-44ca-930d-bef03d401a56",
+  "id": "d74714c2-1b94-4fe4-b9ed-a29e06792f0b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -89,6 +89,12 @@
           "type": "varchar(45)",
           "primaryKey": false,
           "notNull": false
+        },
+        "default_workspace_id": {
+          "name": "default_workspace_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -112,6 +118,19 @@
           "tableTo": "users",
           "columnsFrom": [
             "updated_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "users_default_workspace_id_workspaces_id_fk": {
+          "name": "users_default_workspace_id_workspaces_id_fk",
+          "tableFrom": "users",
+          "tableTo": "workspaces",
+          "columnsFrom": [
+            "default_workspace_id"
           ],
           "columnsTo": [
             "id"
@@ -162,13 +181,6 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
-        },
-        "is_default": {
-          "name": "is_default",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
         },
         "invite_accepted": {
           "name": "invite_accepted",
@@ -222,22 +234,6 @@
             }
           ],
           "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "uq_user_default_workspace": {
-          "name": "uq_user_default_workspace",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"workspace_members\".\"is_default\" = true",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -319,26 +315,41 @@
           "primaryKey": false,
           "notNull": true
         },
-        "slug": {
-          "name": "slug",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "plan": {
-          "name": "plan",
-          "type": "plan",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'FREE'"
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
+        },
+        "subscription_status": {
+          "name": "subscription_status",
+          "type": "subscription_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'inactive'"
+        },
+        "subscription_interval": {
+          "name": "subscription_interval",
+          "type": "subscription_interval",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'month'"
+        },
+        "user_count": {
+          "name": "user_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 5
+        },
+        "paddle_subscription_id": {
+          "name": "paddle_subscription_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_by": {
           "name": "created_by",
@@ -405,12 +416,24 @@
         "USER"
       ]
     },
-    "public.plan": {
-      "name": "plan",
+    "public.subscription_interval": {
+      "name": "subscription_interval",
       "schema": "public",
       "values": [
-        "FREE",
-        "PRO"
+        "month",
+        "year"
+      ]
+    },
+    "public.subscription_status": {
+      "name": "subscription_status",
+      "schema": "public",
+      "values": [
+        "active",
+        "inactive",
+        "trialing",
+        "canceled",
+        "past_due",
+        "paused"
       ]
     }
   },

@@ -41,12 +41,7 @@ export const createWorkspace = asyncHandler(async (req: Request, res: Response) 
 });
 
 export const getInviteDetails = asyncHandler(async (req: Request, res: Response) => {
-    const token = req.query.token;
-    if (!token || typeof token !== 'string') {
-        throw new AppError('Invitation token is required', 400);
-    }
-
-    const details = await userService.getInviteDetails(token);
+    const details = await userService.getInviteDetails(req.query.token as string );
     return res.json(details);
 });
 

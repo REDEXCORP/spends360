@@ -18,9 +18,9 @@ import { createWorkspaceSchema } from '../utils/validations';
 
 const router = Router();
 
+router.get('/profile', authenticateToken, getProfile);
 router.get('/invite', getInviteDetails);
 router.post('/invite/accept', acceptInvite);
-router.get('/profile', authenticateToken, getProfile);
 router.get('/', authenticateToken, listUsers);
 router.post('/', authenticateToken, requireAdmin, createUser);
 router.delete('/members/:userId', authenticateToken, requireAdmin, removeMember);

@@ -65,11 +65,10 @@ export const update = async (id: number, data: Partial<WorkspaceMemberInsert>) =
 };
 
 export const setDefaultWorkspace = async (userId: number, workspaceId: number) => {
-    await db
+    return await db
         .update(users)
         .set({ defaultWorkspaceId: workspaceId, updatedAt: new Date() })
         .where(eq(users.id, userId));
-    return getWorkspaceMember(userId, workspaceId);
 };
 
 export const remove = async (userId: number, workspaceId: number) => {

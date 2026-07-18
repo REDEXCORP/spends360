@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1784312273535,
-      "tag": "0000_pink_manta",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1784347309793,
-      "tag": "0001_setup-wrokspace-lock",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1784348346522,
-      "tag": "0002_military_outlaw_kid",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1784348366252,
-      "tag": "0003_setup-wrokspace-lock",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1784366832763,
-      "tag": "0004_milky_the_hood",
+      "when": 1784378669654,
+      "tag": "0000_loud_marrow",
       "breakpoints": true
     }
   ]

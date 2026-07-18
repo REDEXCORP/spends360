@@ -57,38 +57,3 @@ export const getUserProfileWithWorkspaces = async (id: number) => {
         .where(eq(users.id, id))
         .orderBy(desc(workspaceMembers.createdAt));
 };
-
-export const getCurrentWorkspace = async (userId: number) => {
-    const viaDefault = await db
-        .select({
-            userId: workspaceMembers.userId,
-            role: workspaceMembers.role,
-            workspaceId: workspaceMembers.workspaceId,
-        })
-        .from(users)
-        .innerJoin(
-            workspaceMembers,
-            and(
-                eq(workspaceMembers.userId, users.id),
-                eq(workspaceMembers.workspaceId, users.defaultWorkspaceId),
-                eq(workspaceMembers.inviteAccepted, true)
-            )
-        )
-        .where(eq(users.id, userId))
-        .limit(1);
-
-    if (viaDefault[0]) return viaDefault[0];
-
-    const fallback = await db
-        .select({
-            userId: workspaceMembers.userId,
-            role: workspaceMembers.role,
-            workspaceId: workspaceMembers.workspaceId,
-        })
-        .from(workspaceMembers)
-        .where(and(eq(workspaceMembers.userId, userId), eq(workspaceMembers.inviteAccepted, true)))
-        .orderBy(asc(workspaceMembers.createdAt))
-        .limit(1);
-
-    return fallback[0];
-};

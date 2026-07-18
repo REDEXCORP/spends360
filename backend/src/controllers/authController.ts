@@ -5,6 +5,7 @@ import {
     loginSchema,
     registerSchema,
     resetPasswordSchema,
+    verifyRegistrationSchema,
 } from '../utils/validations';
 import * as authService from '../services/authService';
 import { getClientIp } from '../utils';
@@ -16,11 +17,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const verifyRegistration = asyncHandler(async (req: Request, res: Response) => {
-    const { email, otp } = req.body ?? {};
-    if (!email || typeof email !== 'string' || !otp || typeof otp !== 'string') {
-        return res.status(400).json({ error: 'Email and OTP are required' });
-    }
-
+    const { email, otp } = verifyRegistrationSchema.parse(req.body);
     const clientIp = getClientIp(req);
     const result = await authService.verifyRegistration(email, otp, clientIp, res);
     return res.json(result);

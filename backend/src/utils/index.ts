@@ -15,7 +15,6 @@ export const getClientIp = (req: Request): string => {
 
 export function removePassword(user: any) {
     delete user?.password;
-    delete user?.refreshToken;
     return user;
 }
 
