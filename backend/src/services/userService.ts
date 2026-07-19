@@ -125,6 +125,14 @@ export const createUser = async (
         throw new AppError('Workspace not found', 404);
     }
 
+    const members = await usersRepository.listUsersByWorkspaceId(workspaceId);
+    if (members.length >= workspace.userCount) {
+        throw new AppError(
+            `Seat limit reached (${workspace.userCount}). Increase seats in Billing first.`,
+            400
+        );
+    }
+
     let invitedUser = await usersRepository.getUserByEmail(normalizedEmail);
 
     if (invitedUser) {

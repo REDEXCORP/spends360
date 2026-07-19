@@ -25,7 +25,7 @@ export const navItems: NavItem[] = [
     { title: 'Bills', url: '/bills', icon: IconFileInvoice },
     { title: 'Vendors', url: '/vendors', icon: IconBuilding },
     { title: 'Subscriptions', url: '/subscriptions', icon: IconRefresh },
-    { title: 'Employees', url: '/employees', icon: IconUsers },
+    { title: 'Users', url: '/users', icon: IconUsers },
     { title: 'Budgets', url: '/budgets', icon: IconWallet },
     { title: 'Reports', url: '/reports', icon: IconChartBar },
     { title: 'AI Assistant', url: '/ai-assistant', icon: IconSparkles },

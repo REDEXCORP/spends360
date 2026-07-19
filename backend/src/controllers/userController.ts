@@ -16,10 +16,6 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
     const { email, role } = req.body;
-    if (!email) {
-        return res.status(400).json({ message: 'Email is required' });
-    }
-
     const newUser = await userService.createUser(
         email,
         role || 'USER',

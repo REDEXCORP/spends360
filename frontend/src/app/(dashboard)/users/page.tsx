@@ -74,7 +74,9 @@ function formatRole(role: WorkspaceMember['role']) {
 }
 
 export default function UsersPage() {
+    const { profile } = useAuth();
     const queryClient = useQueryClient();
+    const isAdmin = profile?.role === 'ADMIN';
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [memberToRemove, setMemberToRemove] = useState<WorkspaceMember | null>(null);
     const [emailInput, setEmailInput] = useState('');
@@ -219,7 +221,7 @@ export default function UsersPage() {
                             : `${users.length} member${users.length === 1 ? '' : 's'} in this workspace`}
                     </p>
                 </div>
-                {inviteDialog}
+                {isAdmin ? inviteDialog : null}
             </div>
 
             {isLoading ? (
@@ -233,15 +235,19 @@ export default function UsersPage() {
                     </div>
                     <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">No members yet</h3>
                     <p className="mt-1 max-w-md text-sm text-neutral-500">
-                        Invite teammates to collaborate in this workspace.
+                        {isAdmin
+                            ? 'Invite teammates to collaborate in this workspace.'
+                            : 'Ask a workspace admin to invite teammates.'}
                     </p>
-                    <Button
-                        onClick={() => setIsDialogOpen(true)}
-                        className="mt-6 gap-2 bg-[#492FA6] text-white hover:bg-[#492FA6]/90"
-                    >
-                        <IconPlus size={16} stroke={1.75} />
-                        Invite your first member
-                    </Button>
+                    {isAdmin ? (
+                        <Button
+                            onClick={() => setIsDialogOpen(true)}
+                            className="mt-6 gap-2 bg-[#492FA6] text-white hover:bg-[#492FA6]/90"
+                        >
+                            <IconPlus size={16} stroke={1.75} />
+                            Invite your first member
+                        </Button>
+                    ) : null}
                 </div>
             ) : (
                 <div className="overflow-hidden rounded border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
@@ -253,7 +259,9 @@ export default function UsersPage() {
                                     <TableHead className="px-6">Role</TableHead>
                                     <TableHead className="px-6">Status</TableHead>
                                     <TableHead className="px-6">Joined</TableHead>
-                                    <TableHead className="px-6 text-right">Actions</TableHead>
+                                    {isAdmin ? (
+                                        <TableHead className="px-6 text-right">Actions</TableHead>
+                                    ) : null}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -309,18 +317,20 @@ export default function UsersPage() {
                                             <TableCell className="px-6 py-4 text-sm text-neutral-500">
                                                 {formatJoinedDate(member)}
                                             </TableCell>
-                                            <TableCell className="px-6 py-4 text-right">
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-8 gap-1.5 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30"
-                                                    onClick={() => setMemberToRemove(member)}
-                                                >
-                                                    <IconTrash size={14} stroke={1.75} />
-                                                    Remove
-                                                </Button>
-                                            </TableCell>
+                                            {isAdmin ? (
+                                                <TableCell className="px-6 py-4 text-right">
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 gap-1.5 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30"
+                                                        onClick={() => setMemberToRemove(member)}
+                                                    >
+                                                        <IconTrash size={14} stroke={1.75} />
+                                                        Remove
+                                                    </Button>
+                                                </TableCell>
+                                            ) : null}
                                         </TableRow>
                                     );
                                 })}

@@ -30,40 +30,36 @@ export const getById = async (id: number) => {
     return result[0];
 };
 
-export const activateSubscription = async (
+export const getByPaddleSubscriptionId = async (paddleSubscriptionId: string) => {
+    const result = await db
+        .select()
+        .from(workspaces)
+        .where(eq(workspaces.paddleSubscriptionId, paddleSubscriptionId))
+        .limit(1);
+    return result[0];
+};
+
+/** Sync subscription fields from Paddle webhook */
+export const updateSubscription = async (
     id: number,
     data: {
-        subscriptionInterval: 'month' | 'year';
-        userCount: number;
+        subscriptionStatus: 'active' | 'inactive' | 'trialing' | 'canceled' | 'past_due' | 'paused';
+        subscriptionInterval?: 'month' | 'year';
+        userCount?: number;
         paddleSubscriptionId?: string | null;
-        updatedBy?: number | null;
     }
 ) => {
     const result = await db
         .update(workspaces)
         .set({
-            subscriptionStatus: 'active',
-            subscriptionInterval: data.subscriptionInterval,
-            userCount: data.userCount,
-            paddleSubscriptionId: data.paddleSubscriptionId ?? null,
-            updatedBy: data.updatedBy ?? null,
-            updatedAt: new Date(),
-        })
-        .where(eq(workspaces.id, id))
-        .returning();
-    return result[0];
-};
-
-export const updateSubscriptionStatus = async (
-    id: number,
-    status: 'active' | 'inactive' | 'trialing' | 'canceled' | 'past_due' | 'paused',
-    paddleSubscriptionId?: string | null
-) => {
-    const result = await db
-        .update(workspaces)
-        .set({
-            subscriptionStatus: status,
-            paddleSubscriptionId: paddleSubscriptionId ?? undefined,
+            subscriptionStatus: data.subscriptionStatus,
+            ...(data.subscriptionInterval !== undefined
+                ? { subscriptionInterval: data.subscriptionInterval }
+                : {}),
+            ...(data.userCount !== undefined ? { userCount: data.userCount } : {}),
+            ...(data.paddleSubscriptionId !== undefined
+                ? { paddleSubscriptionId: data.paddleSubscriptionId }
+                : {}),
             updatedAt: new Date(),
         })
         .where(eq(workspaces.id, id))

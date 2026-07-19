@@ -52,6 +52,42 @@ export const user = {
     switchWorkspace: (workspaceId: number) => apiRequestV1.put(`/user/workspace/${workspaceId}`, {}),
 };
 
+export const billing = {
+    get: () => apiRequestV1.get('/billing') as Promise<BillingSummary>,
+    updateSeats: (users: number) =>
+        apiRequestV1.patch('/billing/seats', { users }) as Promise<{ userCount: number }>,
+    portal: () => apiRequestV1.post('/billing/portal', {}) as Promise<{ url: string }>,
+};
+
+export type BillingInvoice = {
+    id: string;
+    invoiceNumber: string | null;
+    status: string;
+    billedAt: string | null;
+    currencyCode: string;
+    total: string | null;
+    invoicePdfUrl: string | null;
+};
+
+export type BillingSummary = {
+    subscriptionStatus: string;
+    subscriptionInterval: 'month' | 'year';
+    userCount: number;
+    includedUsers: number;
+    minUsers: number;
+    maxUsers: number;
+    memberCount: number;
+    nextBilledAt: string | null;
+    paddleSubscriptionId: string | null;
+    managementUrls: {
+        updatePaymentMethod: string | null;
+        cancel: string | null;
+    };
+    portalUrl: string | null;
+    paddleError: string | null;
+    invoices: BillingInvoice[];
+};
+
 export const calls = {
     list: () => apiRequestV1.get('/calls') as Promise<any[]>,
 };
