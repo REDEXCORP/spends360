@@ -1,5 +1,5 @@
 import { EventName } from '@paddle/paddle-node-sdk';
-import { userCountFromSubscriptionItems } from '../config/paddlePrices';
+import { clampUsers, userCountFromSubscriptionItems } from '../config/paddlePrices';
 import * as workspaceRepository from '../repositories/workspaceRepository';
 
 type CustomData = {
@@ -60,7 +60,7 @@ const getUserCount = (customData: CustomData, data: any, fallback: number): numb
     if (Number.isFinite(fromItems)) return fromItems;
 
     const parsed = Number(customData.users);
-    if (Number.isFinite(parsed)) return Math.min(50, Math.max(5, parsed));
+    if (Number.isFinite(parsed)) return clampUsers(parsed);
 
     return fallback;
 };
@@ -89,7 +89,6 @@ export const applySubscriptionFromWebhook = async (eventType: string, data: any)
     const subscriptionInterval = getInterval(customData, data, workspace.subscriptionInterval);
     const userCount = getUserCount(customData, data, workspace.userCount);
 
-    // Activate / create / first payment
     if (
         eventType === EventName.SubscriptionActivated ||
         eventType === EventName.SubscriptionCreated ||
@@ -108,7 +107,6 @@ export const applySubscriptionFromWebhook = async (eventType: string, data: any)
         return;
     }
 
-    // Status / quantity changes
     if (
         eventType === EventName.SubscriptionUpdated ||
         eventType === EventName.SubscriptionPastDue ||

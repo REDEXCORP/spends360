@@ -59,18 +59,10 @@ export const createWorkspace = async (userId: number, name: string) => {
     return workspace;
 };
 
-export const updateDefaultWorkspace = async (
-    userId: number,
-    workspaceId: number,
-    res: Response
-) => {
+export const updateDefaultWorkspace = async (userId: number, workspaceId: number, res: Response) => {
     const membership = await workspaceMembersRepository.getWorkspaceMember(userId, workspaceId);
-    if (!membership) {
-        throw new AppError('User does not belong to this workspace', 403);
-    }
-
-    if (!membership.inviteAccepted) {
-        throw new AppError('Please accept the workspace invitation first.', 403);
+    if (!membership || !membership.inviteAccepted) {
+        throw new AppError('User does not belong to this workspace or has not accepted the invitation', 403);
     }
 
     const user = await usersRepository.getUserById(userId);

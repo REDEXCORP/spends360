@@ -5,7 +5,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { billing } from '@/requests';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toastError, toastSuccess } from '@/helpers';
 import { cn } from '@/lib/utils';
@@ -13,8 +12,9 @@ import {
     IconCreditCard,
     IconExternalLink,
     IconLoader2,
+    IconMinus,
+    IconPlus,
     IconReceipt,
-    IconUsers,
 } from '@tabler/icons-react';
 
 function formatMoney(amount: string | null, currency: string) {
@@ -114,24 +114,44 @@ export default function BillingPage() {
                         Manage subscription seats, invoices, and payment methods.
                     </p>
                 </div>
-                {canManage && manageUrl ? (
-                    <Button
-                        variant="outline"
-                        className="gap-2"
-                        disabled={portalMutation.isPending}
-                        onClick={() => {
-                            if (data.portalUrl) portalMutation.mutate();
-                            else window.open(manageUrl, '_blank', 'noopener,noreferrer');
-                        }}
-                    >
-                        {portalMutation.isPending ? (
-                            <IconLoader2 size={16} className="animate-spin" />
-                        ) : (
-                            <IconCreditCard size={16} stroke={1.75} />
-                        )}
-                        Manage subscription
-                        <IconExternalLink size={14} stroke={1.75} />
-                    </Button>
+                {canManage ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                        {data.managementUrls?.updatePaymentMethod ? (
+                            <Button
+                                variant="outline"
+                                className="gap-2"
+                                onClick={() =>
+                                    window.open(
+                                        data.managementUrls.updatePaymentMethod!,
+                                        '_blank',
+                                        'noopener,noreferrer',
+                                    )
+                                }
+                            >
+                                Update payment method
+                                <IconExternalLink size={14} stroke={1.75} />
+                            </Button>
+                        ) : null}
+                        {manageUrl ? (
+                            <Button
+                                variant="outline"
+                                className="gap-2"
+                                disabled={portalMutation.isPending}
+                                onClick={() => {
+                                    if (data.portalUrl) portalMutation.mutate();
+                                    else window.open(manageUrl, '_blank', 'noopener,noreferrer');
+                                }}
+                            >
+                                {portalMutation.isPending ? (
+                                    <IconLoader2 size={16} className="animate-spin" />
+                                ) : (
+                                    <IconCreditCard size={16} stroke={1.75} />
+                                )}
+                                Manage subscription
+                                <IconExternalLink size={14} stroke={1.75} />
+                            </Button>
+                        ) : null}
+                    </div>
                 ) : null}
             </div>
 
@@ -158,50 +178,71 @@ export default function BillingPage() {
                 </div>
             </div>
 
-            <div className="rounded-xl border border-neutral-200 bg-white p-6">
-                <div className="mb-4 flex items-center gap-2">
-                    <IconUsers size={18} stroke={1.75} className="text-[#492FA6]" />
-                    <h2 className="text-base font-semibold">Seats</h2>
-                </div>
-                <p className="text-sm text-neutral-500">
-                    {data.memberCount} member{data.memberCount === 1 ? '' : 's'} · {data.userCount}{' '}
-                    seats ({data.includedUsers} included)
-                </p>
-
-                <div className="mt-6">
-                    <div className="mb-3 flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Users</span>
-                        <span className="text-sm font-semibold tabular-nums">{users}</span>
+            <div className="rounded-xl border border-neutral-200 bg-white p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p className="text-sm text-neutral-500">Seats</p>
+                        <p className="mt-1 text-lg font-semibold">
+                            {data.memberCount} member{data.memberCount === 1 ? '' : 's'} ·{' '}
+                            {data.userCount} seats ({data.includedUsers} included)
+                        </p>
                     </div>
-                    <Slider
-                        min={Math.max(data.minUsers, data.memberCount)}
-                        max={data.maxUsers}
-                        step={1}
-                        value={[users]}
-                        disabled={!canManage || seatsMutation.isPending}
-                        onValueChange={v => setUsers(v[0] ?? data.userCount)}
-                    />
-                </div>
 
-                {canManage ? (
-                    <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
-                        {data.managementUrls?.updatePaymentMethod ? (
-                            <Button
-                                variant="outline"
+                    <div className="flex items-center gap-2">
+                        <div className="flex h-10 items-center overflow-hidden rounded-lg border border-neutral-200">
+                            <button
+                                type="button"
+                                aria-label="Decrease users"
+                                disabled={
+                                    !canManage ||
+                                    seatsMutation.isPending ||
+                                    users <= Math.max(data.minUsers, data.memberCount)
+                                }
+                                className="flex h-full w-10 items-center justify-center border-r border-neutral-200 hover:bg-neutral-50 disabled:pointer-events-none disabled:opacity-40"
                                 onClick={() =>
-                                    window.open(
-                                        data.managementUrls.updatePaymentMethod!,
-                                        '_blank',
-                                        'noopener,noreferrer',
+                                    setUsers(v =>
+                                        Math.max(Math.max(data.minUsers, data.memberCount), v - 1),
                                     )
                                 }
                             >
-                                Update payment method
-                            </Button>
-                        ) : null}
+                                <IconMinus size={16} stroke={1.75} />
+                            </button>
+                            <input
+                                type="number"
+                                min={Math.max(data.minUsers, data.memberCount)}
+                                max={data.maxUsers}
+                                value={users}
+                                disabled={!canManage || seatsMutation.isPending}
+                                className="h-full w-16 border-0 bg-transparent text-center text-base font-semibold tabular-nums outline-none disabled:opacity-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                onChange={e => {
+                                    const next = Number(e.target.value);
+                                    if (!Number.isFinite(next)) return;
+                                    setUsers(
+                                        Math.min(
+                                            data.maxUsers,
+                                            Math.max(
+                                                Math.max(data.minUsers, data.memberCount),
+                                                next,
+                                            ),
+                                        ),
+                                    );
+                                }}
+                            />
+                            <button
+                                type="button"
+                                aria-label="Increase users"
+                                disabled={
+                                    !canManage || seatsMutation.isPending || users >= data.maxUsers
+                                }
+                                className="flex h-full w-10 items-center justify-center border-l border-neutral-200 hover:bg-neutral-50 disabled:pointer-events-none disabled:opacity-40"
+                                onClick={() => setUsers(v => Math.min(data.maxUsers, v + 1))}
+                            >
+                                <IconPlus size={16} stroke={1.75} />
+                            </button>
+                        </div>
                         <Button
-                            className="bg-[#492FA6] text-white hover:bg-[#492FA6]/90"
-                            disabled={!dirty || seatsMutation.isPending}
+                            className="h-10 shrink-0 bg-[#492FA6] text-white hover:bg-[#492FA6]/90"
+                            disabled={!canManage || !dirty || seatsMutation.isPending}
                             onClick={() => seatsMutation.mutate(users)}
                         >
                             {seatsMutation.isPending ? (
@@ -211,15 +252,7 @@ export default function BillingPage() {
                             )}
                         </Button>
                     </div>
-                ) : (
-                    <p className="mt-4 text-xs text-neutral-500">
-                        {!isAdmin
-                            ? 'Only workspace admins can change seats or manage billing.'
-                            : !linked
-                              ? 'Subscription is not linked to Paddle yet, so seats and invoices cannot load. Refresh after the webhook completes, or use Manage subscription once linked.'
-                              : 'Subscription must be active to manage seats.'}
-                    </p>
-                )}
+                </div>
             </div>
 
             <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">

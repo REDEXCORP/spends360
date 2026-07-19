@@ -52,13 +52,7 @@ export const acceptInvite = asyncHandler(async (req: Request, res: Response) => 
 });
 
 export const updateDefaultWorkspace = asyncHandler(async (req: Request, res: Response) => {
-    const { userId } = authenticatedUser(req);
-    const { workspaceId } = req.params;
-    const updatedWorkspace = await userService.updateDefaultWorkspace(
-        userId,
-        Number(workspaceId),
-        res
-    );
+    const updatedWorkspace = await userService.updateDefaultWorkspace(req.user.userId, Number(req.user.workspaceId),res);
     return res.json(updatedWorkspace);
 });
 

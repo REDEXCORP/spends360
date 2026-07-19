@@ -1,6 +1,6 @@
 export const INCLUDED_USERS = 5;
 export const MIN_USERS = 5;
-export const MAX_USERS = 50;
+export const MAX_USERS = 999999;
 
 export const PADDLE_PRICES = {
     month: {
