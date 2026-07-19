@@ -3,6 +3,7 @@ import {
     IconChartBar,
     IconCircleCheck,
     IconCreditCard,
+    IconCurrencyDollar,
     IconFileInvoice,
     IconLayoutDashboard,
     IconReceipt,
@@ -28,5 +29,6 @@ export const navItems: NavItem[] = [
     { title: 'Budgets', url: '/budgets', icon: IconWallet },
     { title: 'Reports', url: '/reports', icon: IconChartBar },
     { title: 'AI Assistant', url: '/ai-assistant', icon: IconSparkles },
+    { title: 'Billing', url: '/billing', icon: IconCurrencyDollar },
     { title: 'Settings', url: '/settings', icon: IconSettings },
 ];
