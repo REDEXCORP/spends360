@@ -9,8 +9,6 @@ import type {
     Lead,
     Pilot,
     Product,
-    TelnyxConfigForm,
-    TelnyxConfigPublicView,
 } from './types';
 
 export type {
@@ -21,11 +19,8 @@ export type {
     CreateProductBody,
     InviteDetails,
     Lead,
-    PhoneNumberRecord,
     Pilot,
     Product,
-    TelnyxConfigForm,
-    TelnyxConfigPublicView,
     WorkspaceSummary,
 } from './types';
 
@@ -93,9 +88,6 @@ export const calls = {
 };
 
 export const settings = {
-    getTelnyxConfig: () => apiRequestV1.get('/settings/telnyx') as Promise<TelnyxConfigPublicView>,
-    saveTelnyxConfig: (body: TelnyxConfigForm) =>
-        apiRequestV1.put('/settings/telnyx', body) as Promise<TelnyxConfigPublicView>,
 };
 
 export const products = {

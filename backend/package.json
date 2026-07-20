@@ -55,7 +55,6 @@
         "pg": "^8.16.3",
         "stripe": "^17.7.0",
         "stripe-event-types": "^3.1.0",
-        "telnyx": "^6.65.0",
         "tweetnacl": "^1.0.3",
         "twilio": "^6.0.2",
         "unpdf": "^1.4.0",

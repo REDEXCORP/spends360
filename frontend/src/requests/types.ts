@@ -1,7 +1,6 @@
-import type { PhoneNumberRecord } from '@/constants/telnyxRegions';
 import type { InviteDetails } from '@/helpers/invite';
 
-export type { InviteDetails, PhoneNumberRecord };
+export type { InviteDetails };
 
 export interface WorkspaceSummary {
     id: number;
@@ -12,27 +11,6 @@ export interface WorkspaceSummary {
     subscriptionStatus?: 'active' | 'inactive' | 'trialing' | 'canceled' | 'past_due' | 'paused';
     subscriptionInterval?: 'month' | 'year';
     userCount?: number;
-}
-
-export interface TelnyxConfigForm {
-    apiKey: string;
-    connectionId: string;
-    username: string;
-    password: string;
-    publicKey: string;
-    smsNumbers: PhoneNumberRecord[];
-    callerIds?: PhoneNumberRecord[];
-}
-
-export interface TelnyxConfigPublicView {
-    configured: boolean;
-    connectionId?: string;
-    username?: string;
-    smsNumbers?: PhoneNumberRecord[];
-    callerIds?: PhoneNumberRecord[];
-    hasApiKey: boolean;
-    hasPassword: boolean;
-    hasPublicKey: boolean;
 }
 
 export interface Product {

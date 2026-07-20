@@ -2,6 +2,8 @@ import { Request } from 'express';
 
 export const getUsernameFromEmail = (email: string): string => email.split('@')[0];
 
+export const normalizeEmail = (email: string): string => email.toLowerCase();
+
 export const getClientIp = (req: Request): string => {
     const forwarded = req.headers['x-forwarded-for'];
     if (typeof forwarded === 'string') {
@@ -21,11 +23,11 @@ export function removePassword(user: any) {
 export function authenticatedUser(req: Request): { userId: number; workspaceId: number; role: string } {
     const user = req.user;
 
-    if (!user || !user.userId || !user.workspaceId || !user.role) throw new Error('Unauthorized');
+    if (!user || !user.userId || !Number.isFinite(user.workspaceId) || !user.role) throw new Error('Unauthorized');
 
     return {
-        userId: user.userId,
-        workspaceId: user.workspaceId,
+        userId: Number(user.userId),
+        workspaceId: Number(user.workspaceId),
         role: user.role,
     };
 }

@@ -14,7 +14,6 @@ const items: { value: string; label: string; icon: Icon }[] = [
     { value: 'general', label: 'General', icon: IconSettings },
     { value: 'notifications', label: 'Notifications', icon: IconBell },
     { value: 'workspace', label: 'Workspace', icon: IconBuilding },
-    { value: 'telnyx', label: 'Telnyx', icon: IconPhone },
 ];
 
 export default function SettingsNav() {

@@ -1,6 +1,5 @@
 'use client';
 
-import TelnyxConfigSection from '@/components/settings/TelnyxConfigSection';
 import WorkspaceSettingsSection from '@/components/settings/WorkspaceSettingsSection';
 import SettingsTabPanel from '@/components/settings/SettingsTabPanel';
 import ComingSoonPlaceholder from '@/components/settings/ComingSoonPlaceholder';
@@ -42,12 +41,6 @@ export default function SettingsPage() {
                             description="Workspace name, timezone, and defaults."
                         >
                             <WorkspaceSettingsSection />
-                        </SettingsTabPanel>
-                    </TabsContent>
-
-                    <TabsContent value="telnyx" className="mt-0">
-                        <SettingsTabPanel>
-                            <TelnyxConfigSection />
                         </SettingsTabPanel>
                     </TabsContent>
                 </div>
