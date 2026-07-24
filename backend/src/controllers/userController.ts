@@ -16,13 +16,8 @@ export const listUsers = asyncHandler(async (req: Request, res: Response) => {
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
     const { email, role } = req.body;
-    const newUser = await userService.createUser(
-        email,
-        role || 'USER',
-        req.user.workspaceId,
-        req.user.userId
-    );
-
+    const { userId, workspaceId } = authenticatedUser(req)
+    const newUser = await userService.createUser(email, role || 'USER', workspaceId, userId);
     return res.status(201).json(newUser);
 });
 

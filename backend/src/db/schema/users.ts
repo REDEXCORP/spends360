@@ -10,7 +10,6 @@ export const users = pgTable('users', {
     createdBy: bigint({ mode: 'number' }).references((): AnyPgColumn => users.id, { onDelete: 'set null' }),
     updatedAt: timestamp({ withTimezone: true }).defaultNow(),
     updatedBy: bigint({ mode: 'number' }).references((): AnyPgColumn => users.id, { onDelete: 'set null' }),
-    isOnline: boolean().default(false),
     otp: varchar({ length: 6 }),
     otpExpiresAt: timestamp({ withTimezone: true }),
     lastLoginAt: timestamp({ withTimezone: true }),

@@ -1,4 +1,5 @@
-import { AuthService, InviteTokenPayload } from '../infrastructure/auth';
+import { AuthService } from '../infrastructure/auth';
+import { InviteTokenPayload } from '../utils/interfaces';
 import * as usersRepository from '../repositories/usersRepository';
 import * as workspaceMembersRepository from '../repositories/workspaceMembersRepository';
 import * as workspaceRepository from '../repositories/workspaceRepository';

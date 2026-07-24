@@ -1,16 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { INVITE_TOKEN_EXPIRES_IN, REGISTRATION_TOKEN_EXPIRES_IN } from '../config/auth';
-
-export type RegistrationTokenPayload = {
-    email: string;
-};
-
-export type InviteTokenPayload = {
-    email: string;
-    workspaceId: number;
-    role: 'ADMIN' | 'USER';
-};
+import { InviteTokenPayload, RegistrationTokenPayload } from '../utils/interfaces';
 
 export class AuthService {
     private static readonly SALT_ROUNDS = 10;
@@ -23,16 +14,8 @@ export class AuthService {
         return await bcrypt.compare(password, hashedPassword);
     }
 
-    static generateAccessToken(
-        userId: number,
-        role: string | null,
-        workspaceId: number | null = null
-    ): string {
-        return jwt.sign(
-            { sub: userId.toString(), role, workspaceId },
-            process.env.JWT_SECRET!,
-            { expiresIn: '24h' }
-        );
+    static generateAccessToken(userId: number, role: string, workspaceId: number): string {
+        return jwt.sign({ sub: userId.toString(), role, workspaceId }, process.env.JWT_SECRET!, { expiresIn: '24h' });
     }
 
     static validateAndExtractClaims(token: string, secret: string): any {

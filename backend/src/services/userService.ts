@@ -3,7 +3,7 @@ import { Response } from 'express';
 import * as usersRepository from '../repositories/usersRepository';
 import * as workspaceRepository from '../repositories/workspaceRepository';
 import * as workspaceMembersRepository from '../repositories/workspaceMembersRepository';
-import { removePassword } from '../utils';
+import { normalizedEmails, removePassword } from '../utils';
 import { sendEmail } from './emailService';
 import { AppError } from '../utils/AppError';
 import { generateTokensAndSetCookies } from './authService';
@@ -104,14 +104,10 @@ const sendWorkspaceInviteEmail = async (
 export const createUser = async (
     email: string,
     role: 'ADMIN' | 'USER',
-    workspaceId: number | null,
+    workspaceId: number,
     creatorId: number
 ) => {
-    if (!workspaceId) {
-        throw new AppError('Your account must belong to a workspace to add users.', 400);
-    }
-
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail = normalizedEmails(email);
     const workspace = await workspaceRepository.getById(workspaceId);
     if (!workspace) {
         throw new AppError('Workspace not found', 404);

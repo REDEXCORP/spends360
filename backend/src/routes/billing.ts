@@ -1,6 +1,5 @@
 import { Router } from 'express';
-import { authenticateToken } from '../middleware/auth-middleware';
-import { requireAdmin } from '../middleware/admin-middleware';
+import { authenticateToken, requireAdmin } from '../middleware/auth-middleware';
 import { createPortalSession, getBilling, updateSeats } from '../controllers/billingController';
 
 const router = Router();

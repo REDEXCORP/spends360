@@ -10,8 +10,7 @@ import {
     removeMember,
     deleteWorkspace,
 } from '../controllers/userController';
-import { authenticateToken } from '../middleware/auth-middleware';
-import { requireAdmin } from '../middleware/admin-middleware';
+import { authenticateToken, requireAdmin } from '../middleware/auth-middleware';
 import { zodValidator } from '../middleware/zod-validator';
 import { createWorkspaceSchema } from '../utils/validations';
 

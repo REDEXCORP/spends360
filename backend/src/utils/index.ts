@@ -2,7 +2,7 @@ import { Request } from 'express';
 
 export const getUsernameFromEmail = (email: string): string => email.split('@')[0];
 
-export const normalizeEmail = (email: string): string => email.toLowerCase();
+export const normalizedEmails = (email: string): string => email.trim().toLowerCase();
 
 export const getClientIp = (req: Request): string => {
     const forwarded = req.headers['x-forwarded-for'];

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { ErrorObject } from './error-handler';
+import { ErrorObject } from '../utils/interfaces';
 
 export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>): RequestHandler => {
     return (req: Request, res: Response, next: NextFunction) => {

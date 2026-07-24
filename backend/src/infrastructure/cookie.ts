@@ -1,9 +1,7 @@
 import { Response, Request } from 'express';
 
 export class CookieConfig {
-    static get ACCESS_TOKEN_COOKIE_NAME() {
-        return process.env.AUTH_ACCESS_TOKEN_COOKIE_NAME || 'access_token_spends360';
-    }
+    public static ACCESS_TOKEN_COOKIE_NAME = process.env.AUTH_ACCESS_TOKEN_COOKIE_NAME!
 
     static setCookie(res: Response, name: string, value: string, maxAgeMs: number = 7 * 24 * 60 * 60 * 1000): void {
         const isProd = process.env.NODE_ENV === 'production';

@@ -5,7 +5,7 @@ import { AppError } from '../utils/AppError';
 import { AuthService } from '../infrastructure/auth';
 import { CookieConfig } from '../infrastructure/cookie';
 import { Response } from 'express';
-import { getUsernameFromEmail, removePassword } from '../utils';
+import { getUsernameFromEmail, normalizedEmails, removePassword } from '../utils';
 import { getDateWithOffset } from '../utils/dateUtils';
 import { sendEmail } from './emailService';
 import { buildOtpEmail } from '../templates/otpTemplate';
@@ -93,7 +93,7 @@ export const logout = async (res: Response) => {
 };
 
 export const register = async (email: string, password: string) => {
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail = normalizedEmails(email);
     const existingUser = await usersRepository.getUserByEmail(normalizedEmail);
     const passwordHash = await AuthService.hashPassword(password);
 
