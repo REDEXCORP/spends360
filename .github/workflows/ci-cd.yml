@@ -33,7 +33,7 @@ jobs:
               env:
                   VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
                   VERCEL_ORG_ID: team_KIXm4piTrsRihqqtltA3YtX2
-                  VERCEL_PROJECT_ID: prj_cR03p52v6gjcrTZKLwSy3jRRWass
+                  VERCEL_PROJECT_ID: prj_vkOoLc8uDeierY12lVQnHKNS4m3O
               run: |
                   cd backend
                   npx vercel --prod --yes --token $VERCEL_TOKEN
