@@ -59,7 +59,12 @@ export default function WorkspaceSettingsSection() {
                 <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Current workspace</p>
                 <p className="mt-1 text-base font-semibold text-neutral-900">{activeWorkspace.name}</p>
                 <p className="mt-1 text-sm text-neutral-500">
-                    Plan: {activeWorkspace.plan ?? 'FREE'} · Role: {activeWorkspace.role === 'ADMIN' ? 'Admin' : 'User'}
+                    Plan:{' '}
+                    {activeWorkspace.subscriptionStatus === 'active' ||
+                    activeWorkspace.subscriptionStatus === 'trialing'
+                        ? 'PRO'
+                        : 'FREE'}{' '}
+                    · Role: {activeWorkspace.role === 'ADMIN' ? 'Admin' : 'User'}
                 </p>
             </div>
 
