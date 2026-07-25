@@ -34,9 +34,7 @@ jobs:
                   VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
                   VERCEL_ORG_ID: team_KIXm4piTrsRihqqtltA3YtX2
                   VERCEL_PROJECT_ID: prj_vkOoLc8uDeierY12lVQnHKNS4m3O
-              run: |
-                  cd backend
-                  npx vercel --prod --yes --token $VERCEL_TOKEN
+              run: npx vercel --prod --yes --token $VERCEL_TOKEN
 
     deploy-frontend:
         name: Deploy Frontend
