@@ -32,11 +32,11 @@ jobs:
             - name: Deploy API to Vercel
               env:
                   VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-                  VERCEL_ORG_ID: team_YhsHf7QvDyA4Hr9g7s3yYB0K
+                  VERCEL_ORG_ID: team_KIXm4piTrsRihqqtltA3YtX2
                   VERCEL_PROJECT_ID: prj_cR03p52v6gjcrTZKLwSy3jRRWass
               run: |
                   cd backend
-                  npx vercel --prod --confirm --token $VERCEL_TOKEN
+                  npx vercel --prod --yes --token $VERCEL_TOKEN
 
     deploy-frontend:
         name: Deploy Frontend
@@ -63,6 +63,4 @@ jobs:
                   VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
                   VERCEL_ORG_ID: team_KIXm4piTrsRihqqtltA3YtX2
                   VERCEL_PROJECT_ID: prj_IOsdD7H9gJ25dgb8GJRpdJZojh7U
-              run: |
-                  cd frontend
-                  npx vercel --prod --confirm --token $VERCEL_TOKEN
+              run: npx vercel --prod --yes --token $VERCEL_TOKEN
