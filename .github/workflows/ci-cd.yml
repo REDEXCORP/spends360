@@ -61,8 +61,8 @@ jobs:
             - name: Deploy Frontend to Vercel
               env:
                   VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-                  VERCEL_ORG_ID: team_YhsHf7QvDyA4Hr9g7s3yYB0K
-                  VERCEL_PROJECT_ID: prj_RgiUNIll2p5qLIz7w5fOhlyppNM5
+                  VERCEL_ORG_ID: team_KIXm4piTrsRihqqtltA3YtX2
+                  VERCEL_PROJECT_ID: prj_IOsdD7H9gJ25dgb8GJRpdJZojh7U
               run: |
                   cd frontend
                   npx vercel --prod --confirm --token $VERCEL_TOKEN
