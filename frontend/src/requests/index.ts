@@ -1,26 +1,36 @@
 import { apiRequestV1 } from './services';
 import type {
+    ApprovalQueueItem,
     Batch,
     CreateBatchBody,
     CreateLeadBody,
     CreatePilotBody,
     CreateProductBody,
+    CreateRequestBody,
     InviteDetails,
     Lead,
     Pilot,
     Product,
+    SpendRequest,
 } from './types';
 
 export type {
+    ApprovalQueueItem,
     Batch,
     CreateBatchBody,
     CreateLeadBody,
     CreatePilotBody,
     CreateProductBody,
+    CreateRequestBody,
     InviteDetails,
     Lead,
     Pilot,
     Product,
+    RequestApprover,
+    RequestComment,
+    RequestPriority,
+    RequestStatus,
+    SpendRequest,
     WorkspaceSummary,
 } from './types';
 
@@ -81,6 +91,30 @@ export type BillingSummary = {
     portalUrl: string | null;
     paddleError: string | null;
     invoices: BillingInvoice[];
+};
+
+export const spendRequests = {
+    listMine: () => apiRequestV1.get('/requests/mine') as Promise<SpendRequest[]>,
+    listMyTasks: () => apiRequestV1.get('/requests/assigned/mine') as Promise<SpendRequest[]>,
+    listMyApprovals: () =>
+        apiRequestV1.get('/requests/approvals/mine') as Promise<ApprovalQueueItem[]>,
+    get: (requestId: number) =>
+        apiRequestV1.get(`/requests/${requestId}`) as Promise<SpendRequest>,
+    create: (body: CreateRequestBody) =>
+        apiRequestV1.post('/requests', body) as Promise<SpendRequest>,
+    cancel: (requestId: number) =>
+        apiRequestV1.patch(`/requests/${requestId}/cancel`, {}) as Promise<SpendRequest>,
+    addComment: ({ requestId, body }: { requestId: number; body: string }) =>
+        apiRequestV1.post(`/requests/${requestId}/comments`, { body }) as Promise<SpendRequest>,
+    decideApproval: ({
+        approvalId,
+        action,
+        comment,
+    }: {
+        approvalId: number;
+        action: 'APPROVED' | 'REJECTED';
+        comment?: string;
+    }) => apiRequestV1.patch(`/requests/approvals/${approvalId}`, { action, comment }),
 };
 
 export const calls = {

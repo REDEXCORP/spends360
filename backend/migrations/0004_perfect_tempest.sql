@@ -1,0 +1,1 @@
+ALTER TABLE "request_approvers" ADD COLUMN "comment" text;
